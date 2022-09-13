@@ -21,12 +21,30 @@ class CityHub:
      """CityHub class for urban data integration.
      
      Attributes:
-         city_street_graph (Graph): A networkX undirected graph.
+         city_street_graph (Graph): A networkX undirected graph representing the city street graph.
+         city_vert_list (list): List of vertices coordinates tuples of city street graph.
+         city_vert_dict (dict): Dictionary of vertices coordinates of city street graph. Keys are coordinates, and values are its city_vert_list indices.
+         city_tree (BallTree): BallTree of refined city street graph vertices.
+         city_vert_ind_to_nxind_dict (dict): Dictionary to convert from city_vert_list indices to NetworkX indices
+         city_vert_nxind_to_ind_dict (dict): Dictionary to convert from NetworkX indices to city_vert_list indices
+         refined_city_vert_correspondence_dict (dict): Dictionary of correspondences between original and refined city street graph vertices
+         refined_city_vert_list (list): List of refined vertices coordinates tuples of city street graph.
+         refined_city_vert_dict (dict): Dictionary of refined vertices coordinates of city street graph. Keys are coordinates, and values are its refined_city_vert_list indices.
          
          RDLayers (list): The list of Regional Domain (RD) Layers.
+         RDLayers_vert_list (dict): Dictionary of lists of RD Layers vertices coordinates
+         RDLayers_balltree (BallTree): Dictionary of BallTrees of RDLayers
+         RDLayers_area_vertices_indices_dict (dict): Dictionary of dictionaries for each RD layer, where the key is an area index and the value is a list with the indices of its vertices.
+         RDLayers_area_vertices_coords_dict (dict): Dictionary of dictionaries for each RD layer, where the key is an area index, and the value is a list with the coordinates of its vertices.
+         RDLayers_vertices_area_dict (dict): Dictionary of dictionaries for each RD layer, where the key is a vertex index, and the value is its area
          PBLayers (list): The list of Point-based (PB) Layers.
+         PBLayers_balltree (dict): Dictionary of BallTrees of PBLayers
+         PBLayers_csv_lat_key_column (dict): Dictionary of the key latitude column of each PB Layer.
+         PBLayers_csv_lng_key_column (dict): Dictionary of the key longitude column of each PB Layer.   
+         PBLayers_corner_projection_dicts (dict): Dictionary of dictionaries, being one for each corner of the city street graph, holding points from the corresponding PBLayer that are projected to that corner.
          PALayers_mesh (list): The list of the meshes of the Polygon-Aggregated (PA) layers.
-         PALayers_keycolumns (dict): Dictionary of the key column of each PA layer.
+         PALayers_mesh_keycolumn (dict): Dictionary of the key column of each PA layer mesh.
+         PALayers_csv_keycolumn (dict):  Dictionary of the key column of each PA layer csv data.
          
          
      """
@@ -47,7 +65,6 @@ class CityHub:
         self.refined_city_vert_correspondence_dict = dict()        
         self.refined_city_vert_list = []
         self.refined_city_vert_correspondence_list = [] 
-        self.refined_city_vert_set = set()
         
         
         ##layers' data
@@ -55,16 +72,24 @@ class CityHub:
         # Regional Domain (RD) Layer 
         self.RDLayers = []
         self.RDLayers_balltree = dict()       
-        self.RDLayers_vert_list = dict() 
+        self.RDLayers_vert_list = dict()         
+        self.RDLayers_area_vertices_indices_dict = dict()
+        self.RDLayers_area_vertices_coords_dict = dict()
+        self.RDLayers_vertices_area_dict = dict()
         
         # Point-Based (PB) Layer         
         self.PBLayers = []
         self.PBLayers_balltree = dict()
+        self.PBLayers_csv_lat_key_column = dict()
+        self.PBLayers_csv_lng_key_column = dict()
+        self.PBLayers_corner_projection_dicts = dict()
+        
         
         # Polygon-Aggregated (PA) Layer
         self.PALayers_mesh = []
-        self.PALayers_keycolumns = dict()
-        
+        self.PALayers_csv_data = dict()
+        self.PALayers_mesh_keycolumn = dict()
+        self.PALayers_csv_keycolumn = dict()
         self.PALayers_polygon_vertices_dict = dict()
         self.PALayers_aggregated_polygon_vert_list = dict()
         self.PALayers_aggregated_polygon_vert_dict = dict()
@@ -77,13 +102,7 @@ class CityHub:
         
         
         
-        
-        self.layers_area_vertices_indices_dict = dict()
-        self.layers_area_vertices_coords_dict = dict()
-        self.layers_vertices_area_dict = dict()
-
-        
-        #feature vectors data
+        #optional feature vectors data
         self.feature_vecs = []
         
         #visualization variables
@@ -138,7 +157,6 @@ class CityHub:
         """
         Load a Polygon-Aggregated Layer mesh from a file for polygon-aggregated data purposes, 
         such as census sectors data. KML and SHP formats are accepted.
-        In case of success, the GeoDataFrame city_mesh_df will be created.
     
         Parameters
         ----------
@@ -165,7 +183,7 @@ class CityHub:
                 self.PALayers_mesh.append(aggregated_polygon_mesh=gpd.read_file(filename, driver='SHP'))
             except:
                 return False
-        self.PALayers_keycolumns[len(self.PALayers_mesh)-1]=key_column
+        self.PALayers_mesh_keycolumn[len(self.PALayers_mesh)-1]=key_column
         self.preprocess_PALayer_mesh(len(self.PALayers_mesh)-1,True,True,EDGE_LENGTH_THRESHOLD)
         return True
 
@@ -184,7 +202,7 @@ class CityHub:
         
      def preprocess_city_mesh(self, build_tree=True, EDGE_LENGTH_THRESHOLD=sys.float_info.max):
         """
-        Generate data structures to quickly retrieve relevant information. A valid city_mesh_df is required.
+        Generate data structures to quickly retrieve relevant information. A valid city_street_graph is required.
     
         Parameters
         ----------
@@ -210,6 +228,7 @@ class CityHub:
         if(EDGE_LENGTH_THRESHOLD<sys.float_info.max-1):
             print('Refining mesh...')
             refined_city_vert_coords_correspondence_dict = dict()
+            refined_city_vert_set = set()
 
             for u,v,a in self.city_street_graph.edges(data=True):
                 vertA = self.city_vert_list[self.city_vert_nxind_to_ind_dict[u]]
@@ -218,7 +237,7 @@ class CityHub:
                 latlong_dist = ox.distance.euclidean_dist_vec(vertA[0],vertA[1],vertB[0],vertB[1])
           #      self.city_street_graph[u][v]['weight'] = great_circle_dist
                 
-                self.refined_city_vert_set.add(vertA)
+                refined_city_vert_set.add(vertA)
                 refined_city_vert_coords_correspondence_dict[vertA] = [self.city_vert_nxind_to_ind_dict[u],self.city_vert_nxind_to_ind_dict[v]]
                 if(great_circle_dist>EDGE_LENGTH_THRESHOLD):
                     latlong_threshold = EDGE_LENGTH_THRESHOLD * latlong_dist / great_circle_dist
@@ -227,12 +246,12 @@ class CityHub:
                 
                     for n in range(1,num_vert-1):
                         interpolated_coords = line.interpolate(n / num_vert, normalized=True).coords[0]
-                        self.refined_city_vert_set.add(interpolated_coords)
+                        refined_city_vert_set.add(interpolated_coords)
                         refined_city_vert_coords_correspondence_dict[interpolated_coords] = [self.city_vert_nxind_to_ind_dict[u],self.city_vert_nxind_to_ind_dict[v]]
-                self.refined_city_vert_set.add(vertB)
+                refined_city_vert_set.add(vertB)
                 refined_city_vert_coords_correspondence_dict[vertB] = [self.city_vert_nxind_to_ind_dict[u],self.city_vert_nxind_to_ind_dict[v]]
                 
-            self.refined_city_vert_list = list(self.refined_city_vert_set)
+            self.refined_city_vert_list = list(refined_city_vert_set)
             self.refined_city_vert_dict={k: v for v, k in enumerate(self.refined_city_vert_list)}       
             
             for k in self.refined_city_vert_dict.keys():                
@@ -245,7 +264,7 @@ class CityHub:
             self.refined_city_vert_correspondence_dict = self.refined_city_vert_dict.copy()
             
         if build_tree:
-            self.build_city_tree()
+            self.city_tree = BallTree(np.deg2rad(np.c_[np.array(self.refined_city_vert_list)]), metric='haversine')
         
         return True
 
@@ -385,32 +404,31 @@ class CityHub:
         return True
     
     
-     def load_polygon_csv_data(self, filename, polygon_key_column):
+     def load_PALayers_csv_data(self, layer, filename, polygon_key_column):
         """
         Load a CSV file made up of polygon-aggregated data and generate datadf dataframe.
     
         Parameters
         ----------
-        filename : string
-            CSV filename. 
-        polygon_key_column: string
-            Name of the key column of the CSV file that matches the polygon's key column of the city mesh dataframe (city_mesh_df)
+        layer (int): layer position according to self.PALayers_mesh.
+        filename (string): CSV filename. 
+        polygon_key_column (string): Name of the key column of the CSV file that matches the polygon's key column PALayers_mesh_keycolumn of the corresponding PA Layer.
         
         Returns
         -------
             returns True if the CSV file is succesfully loaded.
         """
         try:
-            self.datadf=pd.read_csv(filename)
-            self.csv_polygon_key_column = polygon_key_column
+            self.PALayers_csv_data[layer]=pd.read_csv(filename)
         except NameError as e:
              print(e)  
              return False
         
-        if polygon_key_column in self.datadf.columns:
-            self.csv_polygon_key_column = polygon_key_column
+        if polygon_key_column in self.PALayers_csv_data[layer].columns:
+            self.PALayers_csv_keycolumn[layer] = polygon_key_column
         else:
             print('invalid polygon_key_column.')
+            return False
             
         return True    
     
@@ -449,7 +467,7 @@ class CityHub:
             self.preprocess_RDLayer(len(self.RDLayers)-1, True, swap_coordinates)
         return len(self.RDLayers)-1
     
-     def load_layer_points(self, filename, zone_number=23, zone_letter='K', build_tree=True, error_x=0.0, error_y=0.0):
+     def load_PBLayer(self, filename, zone_number=23, zone_letter='K', build_tree=True, error_x=0.0, error_y=0.0):
         """
         Load a SHP or KML file made up of places that are georreferenced as single points (positions) in UTM format. Points are converted to lat-long format and stored in self.PBLayers[layer]['latlong'] as tuples.
     
@@ -487,7 +505,6 @@ class CityHub:
             except:
                 return -1
         
-        
         self.PBLayers.append(pointdf)
         layer=len(self.PBLayers)-1
         if build_tree:
@@ -495,16 +512,16 @@ class CityHub:
         return True
 
 
-     def load_point_csv_data(self, filename, lat_key_column, lng_key_column, build_tree=True):
+     def load_PBLayer_csv_data(self, layer, filename, lat_key_column, lng_key_column, build_tree=True):
         """
-        Load a CSV file made up of coordinates data and appends it to points layer.
+        Load a CSV file made up of coordinates data and appends it to a PBLayer.
     
         Parameters
         ----------
-        filename : string
-            CSV filename. 
-        lat_key_column: string
-            Name of the key column of the CSV file that matches the latitude
+        layer (int): layer position according to self.PBLayers.
+        filename (string): CSV filename. 
+        lat_key_column (string): Name of the key column of the CSV file that matches the latitude.
+        lng_key_column (string): Name of the key column of the CSV file that matches the longitude.
         
         Returns
         -------
@@ -519,13 +536,13 @@ class CityHub:
              return False
         
         if lat_key_column in pointdf.columns:
-            self.csv_lat_key_column = lat_key_column
+            self.PBLayers_csv_lat_key_column[layer] = lat_key_column
         else:
             print('invalid lat_key_column.')
             return False
 
         if lng_key_column in pointdf.columns:
-            self.csv_lng_key_column = lng_key_column
+            self.PBLayers_csv_lng_key_column[layer] = lng_key_column
         else:
             print('invalid lng_key_column.')
             return False
@@ -544,15 +561,14 @@ class CityHub:
              self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
         return True
      
-     def preprocess_PBLayer(self, layer, swap_coordinates = False):
+     def preprocess_PBLayer(self, layer):
         """
-        Generate data structures to quickly retrieve relevant information from PBLayer. The layer must be loaded first.
+        Generate data structures to quickly retrieve relevant information from PBLayer, by projecting points to the nearest city street graph corner. The layer must be loaded first.
     
         Parameters
         ----------
         layer (int): layer position according to self.PBLayers
         build_tree (bool): builds a BallTree for querying
-        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
         
         Returns
         -------
@@ -562,21 +578,13 @@ class CityHub:
         if len(self.PBLayers)<=layer:
             return False
         
-        X=0
-        Y=1
-        if swap_coordinates:
-            X=1
-            Y=0
 
         vertices_points = [[]] * len(self.city_vert_dict.values())
         for point in self.PBLayers[layer].index:
             vrt = self.query_point_in_city_mesh(self.PBLayers[layer].loc[point]['latlong'][X],self.PBLayers[layer].loc[point]['latlong'][Y], True)
             vertices_points[vrt] = vertices_points[vrt] + [point]
-
-        if hasattr(self, 'layer_points_vertices'):
-            self.layer_points_vertices.update({layer: vertices_points})
-        else:
-            self.layer_points_vertices = {layer: vertices_points}
+            
+        self.PBLayers_corner_projection_dicts[layer] = vertices_points     
 
         return True
 
@@ -769,8 +777,8 @@ class CityHub:
         
         
         """
-        this code will ignore areas with multipolygons and generate self.layers_area_vertices_indices_dict[layer] from self.RDLayers[layer]
-        * self.layers_vertices_indices_dict[layer] is a dictionary where the key is an area index and the value is a list with the indices of its vertices.
+        this code generates self.RDLayers_area_vertices_indices_dict[layer] from self.RDLayers[layer]
+        * self.RDLayers_area_vertices_indices_dict is a dictionary where the key is an area index and the value is a list with the indices of its vertices.
         """
         
         area_vertices_indices_dict = dict()
@@ -783,10 +791,10 @@ class CityHub:
                 polygon_vert_ind_list.append(vert_dict[tuple(vert)])
             area_vertices_indices_dict[layer] = polygon_vert_ind_list
 
-        self.layers_area_vertices_indices_dict[layer]=area_vertices_indices_dict  
+        self.RDLayers_area_vertices_indices_dict[layer]=area_vertices_indices_dict  
         
-        """ this code will ignore areas with multipolygons and generate self.layers_area_vertices_coords_dict[layer] from self.RDLayers[layer]
-        * self.layers_areas_vertices_dict[layer] is a dictionary where the key is an area index, and the value is a list with the coordinates of its vertices
+        """ this code generates self.RDLayers_area_vertices_coords_dict[layer] from self.RDLayers[layer]
+        * self.RDLayers_area_vertices_coords_dict[layer] is a dictionary where the key is an area index, and the value is a list with the coordinates of its vertices
         """
             
         area_vertices_coords_dict = dict()
@@ -795,21 +803,21 @@ class CityHub:
               continue
             area_vertices_coords_dict[area] = np.dstack((self.RDLayers[layer].geometry[area].exterior.coords.xy[X],self.RDLayers[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
         
-        self.layers_area_vertices_coords_dict[layer]=area_vertices_coords_dict  
+        self.RDLayers_area_vertices_coords_dict[layer]=area_vertices_coords_dict  
         
         
-        """ this code will ignore areas with multipolygons and generate self.layers_vertices_area_dict[layer]
-        * self.layers_vertices_area_dict[layer] is a dict where the key is a vertex index, and the value is its area
+        """ this code generates self.layers_vertices_area_dict[layer]
+        * self.RDLayers_vertices_area_dict[layer] is a dict where the key is a vertex index, and the value is its area
         """
             
-        self.layers_vertices_area_dict[layer] = dict()
+        self.RDLayers_vertices_area_dict[layer] = dict()
         for area in self.RDLayers[layer].index:
             if(type(self.RDLayers[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
               continue
             area_vert_list=np.dstack((self.RDLayers[layer].geometry[area].exterior.coords.xy[X],self.RDLayers[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
             for vert in area_vert_list:
                 vert_ind=vert_dict[tuple(vert)]
-                self.layers_vertices_area_dict[layer][vert_ind] = area
+                self.RDLayers_vertices_area_dict[layer][vert_ind] = area
         
             
         if build_tree:
@@ -817,35 +825,10 @@ class CityHub:
         return True
     
     
-     def build_city_tree(self):
-        """
-        Build a BallTree with the vertices of the city mesh. Requires preprocessing the city mesh (preprocess_city_mesh). 
-        refined_city_vert_list is used to build the tree, but the original vertices will be returned by queries.
-    
-        Parameters
-        ----------
-        None
-        
-        Returns
-        -------
-            returns True if the preprocessing succeeds.
-        """
-        #Building the BallTree data structure
-        
-        print('Building tree...')
-        try:
-        #    self.tree = KDTree(np.array(self.vert_list))
-             self.city_tree = BallTree(np.deg2rad(np.c_[np.array(self.refined_city_vert_list)]), metric='haversine')
-        except NameError as e:
-        #    print(e)
-            return False
-        return True
-    
-    
      def query_point_in_city_mesh(self, lat, long, return_nearest_index=False):
         """
-        Query a point in lat-long format, in degrees. Requires a BallTree, which will be built if it does not already exist.
-        refined_vert_list is used to build the tree, but the original vertices will be returned by queries.
+        Query a point in lat-long format (in degrees), in the city street graph.
+        refined_vert_list is used in the tree, but the original vertices will be returned.
     
         Parameters
         ----------
