@@ -1,59 +1,87 @@
-"""This file contains functions and structures to load a city mesh, load polygon-aggregated data layers, polygonal area layers, and layers comprised of places that are georreferenced as single points (positions) in UTM format. Per-vertex data may be retrieved.
-and retrieve per-vertex data."""
-
-import geopandas as gpd
-import shapely
-from shapely.geometry import Point
-import numpy as np
-import pandas as pd
-import osmnx as ox
-import networkx as nx
-import math
 import sys
 import pickle
 import utm
 import operator
+import pandas as pd
+import geopandas as gpd
+import shapely
+from shapely.geometry import Point
+import numpy as np
+import osmnx as ox
+import networkx as nx
+import math
 import folium
 import branca
-#from scipy.spatial import KDTree
 from sklearn.neighbors import BallTree
 from statistics import mean
+            
+EARTH_RADIUS = 6371.0
 
 class CityHub:
-     """A city graph class that can store several mesh-related data structures and georreferenced data.
+     """CityHub class for urban data integration.
      
-     KML and SHP file formats are accepted as input in the initialization."""
+     Attributes:
+         city_street_graph (Graph): A networkX undirected graph.
+         
+         RDLayers (list): The list of Regional Domain (RD) Layers.
+         PBLayers (list): The list of Point-based (PB) Layers.
+         PALayers_mesh (list): The list of the meshes of the Polygon-Aggregated (PA) layers.
+         PALayers_keycolumns (dict): Dictionary of the key column of each PA layer.
+         
+         
+     """
 
      def __init__(self, filename, EDGE_LENGTH_THRESHOLD=40.0):
         """
         Load a city mesh from a file or city query string. GPICKLE (from nx.read_gpickle()) formats are accepted. Then, data structures are generated.
     
-        Parameters
-        ----------
-        filename : string
-            city mesh filename, including the file extension, which will be used to identify the file format.
+        Parameters:
+            filename (string): city mesh filename, including the file extension, which will be used to identify the file format.
+            EDGE_LENGTH_THRESHOLD (float):maximum edge length for robust nearest neighbor search. An edge will be subdivided to 
+            assure its length is less than the threshold.
         
     """
-        #layers' data
-        self.layer_meshes = []
-        self.layer_points = []
-        self.layers_vert_set = dict()
-        self.layers_vert_list = dict()
-        self.layers_vert_dict = dict()
-        self.layers_area_vertices_indices_dict = dict()
-        self.layers_area_vertices_coords_dict = dict()
-        self.layers_meshes_tree = dict()
-        self.layers_points_tree = dict()
-        self.layers_vertices_area_dict = dict()
-
+        
+        
         #city streets data
         self.refined_city_vert_correspondence_dict = dict()        
         self.refined_city_vert_list = []
         self.refined_city_vert_correspondence_list = [] 
         self.refined_city_vert_set = set()
         
-        #aggregated polygon data        
-        self.refined_aggregated_polygon_vert_correspondence_dict = dict()
+        
+        ##layers' data
+        
+        # Regional Domain (RD) Layer 
+        self.RDLayers = []
+        self.RDLayers_balltree = dict()       
+        self.RDLayers_vert_list = dict() 
+        
+        # Point-Based (PB) Layer         
+        self.PBLayers = []
+        self.PBLayers_balltree = dict()
+        
+        # Polygon-Aggregated (PA) Layer
+        self.PALayers_mesh = []
+        self.PALayers_keycolumns = dict()
+        
+        self.PALayers_polygon_vertices_dict = dict()
+        self.PALayers_aggregated_polygon_vert_list = dict()
+        self.PALayers_aggregated_polygon_vert_dict = dict()
+        self.PALayers_aggregated_polygon_vertices_indices_dict = dict()
+        self.PALayers_aggregated_polygon_vert_setcens_list = dict()
+        self.PALayers_refined_aggregated_polygon_vert_list = dict()
+        self.PALayers_refined_aggregated_polygon_vert_dict = dict()
+        self.PALayers_refined_aggregated_polygon_vert_correspondence_dict = dict()
+        self.PALayers_aggregated_polygon_tree = dict()
+        
+        
+        
+        
+        self.layers_area_vertices_indices_dict = dict()
+        self.layers_area_vertices_coords_dict = dict()
+        self.layers_vertices_area_dict = dict()
+
         
         #feature vectors data
         self.feature_vecs = []
@@ -67,24 +95,24 @@ class CityHub:
         self.measu_temp_agg_funcs = dict()
         self.station_info = pd.DataFrame()
 
-        if not self.load_city_mesh(filename):
+        if not self.load_city_street_graph(filename):
             print('Cannot open '+filename)
             return
         self.preprocess_city_mesh(True,EDGE_LENGTH_THRESHOLD)
             
-     def load_city_mesh(self, city_string):
+     def load_city_street_graph(self, city_string):
         """
-        Load a city mesh from OMSnx library city query string, or a gpickle.
-        In case of success, the Graph city_mesh_graph will be created.
+        Load a city street graph from OMSnx library city query string, or a gpickle.
+        In case of success, the Graph city_street_graph will be created.
     
         Parameters
         ----------
-        city_string : string
-            city mesh filename in gpickle format (from nx.read_gpickle()), including the file extension, or a string with the city description to download from OSMnx (i.e. 'Sao Paulo, Brazil')
+        city_string (string): city mesh filename in gpickle format (from nx.read_gpickle()), including the file 
+        extension, or a string with the city description to download from OSMnx (i.e. 'Sao Paulo, Brazil')
         
         Returns
         -------
-            returns True if the city mesh is sucessfully loaded from file.
+            returns True if the city street graph is sucessfully loaded from file.
         """
         
         print('Loading file...')
@@ -92,23 +120,24 @@ class CityHub:
         extension_str = city_string[-3:]
         if(extension_str.lower()=='kle'):
             try:
-                self.city_mesh_graph = nx.read_gpickle(city_string)
+                self.city_street_graph = nx.read_gpickle(city_string)
             except:
                 return False
         else:
             try:
-                self.city_mesh_graph = ox.graph_from_place(city_string, network_type='drive')
+                self.city_street_graph = ox.graph_from_place(city_string, network_type='drive')
             except:
                 return False
             
-        self.city_mesh_graph=self.city_mesh_graph.to_undirected()
+        self.city_street_graph=self.city_street_graph.to_undirected()
     
         return True        
     
     
-     def load_polygon_mesh(self, filename, key_column = 'Name', EDGE_LENGTH_THRESHOLD=sys.float_info.max):
+     def load_PALayer_mesh(self, filename, key_column = 'Name', EDGE_LENGTH_THRESHOLD=sys.float_info.max):
         """
-        Load a polygon mesh from a file for polygon-aggregated data purposes, such as census sectors data. KML and SHP formats are accepted.
+        Load a Polygon-Aggregated Layer mesh from a file for polygon-aggregated data purposes, 
+        such as census sectors data. KML and SHP formats are accepted.
         In case of success, the GeoDataFrame city_mesh_df will be created.
     
         Parameters
@@ -118,32 +147,32 @@ class CityHub:
         key_column : string
             name of the key column of each polygon (or row of the dataframe)
         EDGE_LENGTH_THRESHOLD: float
-            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than edge_length_threshold.            
+            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.            
         Returns
         -------
-            returns True if the city mesh is sucessfully loaded from file.
+            returns True if the PA Layer mesh is sucessfully loaded from file.
         """
         
         extension_str = filename[-3:]
         if(extension_str.lower()=='kml'):
             gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
             try:
-                self.aggregated_polygon_mesh=gpd.read_file(filename, driver='KML')
+                self.PALayers_mesh.append(gpd.read_file(filename, driver='KML'))
             except:
                 return False
         elif(extension_str.lower()=='shp'):
             try:
-                self.aggregated_polygon_mesh=gpd.read_file(filename, driver='SHP')
+                self.PALayers_mesh.append(aggregated_polygon_mesh=gpd.read_file(filename, driver='SHP'))
             except:
                 return False
-        self.key_column=key_column
-        self.preprocess_polygon_mesh(True,True,EDGE_LENGTH_THRESHOLD)
+        self.PALayers_keycolumns[len(self.PALayers_mesh)-1]=key_column
+        self.preprocess_PALayer_mesh(len(self.PALayers_mesh)-1,True,True,EDGE_LENGTH_THRESHOLD)
         return True
 
     
      def save_preprocessed_CityHub(self, filename):
         """
-        Save preprocessed data structures of a city mesh to a pickle file .
+        Save preprocessed data structures of a city street graph to a pickle file .
     
         Parameters
         ----------
@@ -151,7 +180,6 @@ class CityHub:
             Pickle filename to be written.
         """
         pickle.dump(self, open(filename, 'wb'))
-         
         
         
      def preprocess_city_mesh(self, build_tree=True, EDGE_LENGTH_THRESHOLD=sys.float_info.max):
@@ -163,7 +191,7 @@ class CityHub:
         build_tree : bool
             builds a tree for querying
         EDGE_LENGTH_THRESHOLD: float
-            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than edge_length_threshold.
+            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.
         
         Returns
         -------
@@ -172,7 +200,7 @@ class CityHub:
         
         print('Preprocessing city mesh...')
                                               
-        l=list(self.city_mesh_graph.nodes.data())
+        l=list(self.city_street_graph.nodes.data())
         self.city_vert_nxind_to_ind_dict = {k[0]: v for v, k in enumerate(l)}
         self.city_vert_ind_to_nxind_dict = {v: k[0] for v, k in enumerate(l)}
         self.city_vert_list = [tuple((node[1]['y'],node[1]['x'])) for node in l]
@@ -183,12 +211,12 @@ class CityHub:
             print('Refining mesh...')
             refined_city_vert_coords_correspondence_dict = dict()
 
-            for u,v,a in self.city_mesh_graph.edges(data=True):
+            for u,v,a in self.city_street_graph.edges(data=True):
                 vertA = self.city_vert_list[self.city_vert_nxind_to_ind_dict[u]]
                 vertB = self.city_vert_list[self.city_vert_nxind_to_ind_dict[v]]
                 great_circle_dist = ox.distance.great_circle_vec(vertA[0],vertA[1],vertB[0],vertB[1])
                 latlong_dist = ox.distance.euclidean_dist_vec(vertA[0],vertA[1],vertB[0],vertB[1])
-          #      self.city_mesh_graph[u][v]['weight'] = great_circle_dist
+          #      self.city_street_graph[u][v]['weight'] = great_circle_dist
                 
                 self.refined_city_vert_set.add(vertA)
                 refined_city_vert_coords_correspondence_dict[vertA] = [self.city_vert_nxind_to_ind_dict[u],self.city_vert_nxind_to_ind_dict[v]]
@@ -221,24 +249,28 @@ class CityHub:
         
         return True
 
-     def preprocess_polygon_mesh(self, build_tree=True, swap_coordinates=True, EDGE_LENGTH_THRESHOLD=sys.float_info.max):
+     def preprocess_PALayer_mesh(self, layer, build_tree=True, swap_coordinates=True, EDGE_LENGTH_THRESHOLD=sys.float_info.max):
         """
-        Generate data structures to quickly retrieve relevant information from the polygon mesh. A valid aggregated_polygon_mesh and a city mesh are required.
+        Generate data structures to quickly retrieve relevant information from the polygon meshes of Polygon-Aggregated layers.
+        A city street graph is required.
     
         Parameters
         ----------
-        build_tree : bool
-            builds a tree for querying
-        swap_coordinates: bool
-            useful when latitude and longitude coordinates are given in the wrong order.
-        EDGE_LENGTH_THRESHOLD: float
-            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than edge_length_threshold.
+        layer (int): layer position according to self.PALayers_mesh
+        build_tree (bool): builds a BallTree for querying
+        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
+        EDGE_LENGTH_THRESHOLD (float): maximum edge length for robust nearest neighbor search. An edge
+        will be subdivided to assure its length is less than the threshold.
         
         Returns
         -------
             returns True if the preprocessing succeeds.
         """
-        if self.aggregated_polygon_mesh.empty:
+        
+        if len(self.PALayers_mesh)<=layer:
+            return False
+        
+        if self.PALayers_mesh[layer].empty:
             return False
         
         X=0
@@ -248,71 +280,73 @@ class CityHub:
             Y=0
         
         
-        """ this code will ignore census sectors with multipolygons and generate sector_vertices_dict from the original kml dataframe (self.aggregated_polygon_mesh)
-        * sector_vertices_coords_dict is a dictionary where the key is a census sector code, and the value is a list with the coordinates its vertices"""
+        """ this code generate PALayers_polygon_vertices_dict[layer] from the kml dataframe (self.PALayers_mesh[layer])
+        * PALayers_polygon_vertices_dict[layer] is a dictionary where the key is a aggregated-polygon code, and the value is a list with the coordinates of its vertices"""
 
-        self.sector_vertices_coords_dict = dict()
-        for sector in self.aggregated_polygon_mesh.index:
-            if(type(self.aggregated_polygon_mesh.geometry[sector])==shapely.geometry.multipolygon.MultiPolygon):
+        polygon_vertices_dict = dict()
+        for ap in self.self.PALayers_mesh[layer].index:
+            if(type(self.self.PALayers_mesh[layer].geometry[ap])==shapely.geometry.multipolygon.MultiPolygon):
                 continue
-            self.sector_vertices_coords_dict[self.aggregated_polygon_mesh[self.key_column][sector]] = np.dstack((self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[X],self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[Y])).tolist()[0]
+            polygon_vertices_dict[self.PALayers_mesh[layer][self.key_column][ap]] = np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
+        PALayers_polygon_vertices_dict[layer]=polygon_vertices_dict
+        
     
-        """ this code will ignore census sectors with multipolygons and generate vert_set, vert_list and vert_dict from the original kml dataframe (self.aggregated_polygon_mesh)
-        * vert_set is the set of vertices tuples
-        * vert_list is an (indexed) list of tuples of coordinates of the set of (unique) vertices
-        * vert_dict is a dictionary of vertices where the key is a tuple of lat/long coordinates and the value is the index of vert_list """
+        """ this code generates PALayers_aggregated_polygon_vert_list[layer], PALayers_aggregated_polygon_vert_dict[layer] from the original kml dataframe (self.PALayers_mesh[layer])
+        * aggregated_polygon_vert_set is the set of vertices tuples
+        * self.PALayers_aggregated_polygon_vert_list[layer] is an (indexed) list of tuples of coordinates of the set of (unique) vertices
+        * self.PALayers_aggregated_polygon_vert_dict[layer] is a dictionary of vertices where the key is a tuple of lat/long coordinates and the value is the index of vert_list """
 
-        self.aggregated_polygon_vert_set = set()
-        for sector in self.aggregated_polygon_mesh.index:
-            if(type(self.aggregated_polygon_mesh.geometry[sector])==shapely.geometry.multipolygon.MultiPolygon):
+        aggregated_polygon_vert_set = set()
+        for ap in self.PALayers_mesh[layer].index:
+            if(type(self.PALayers_mesh[layer].geometry[ap])==shapely.geometry.multipolygon.MultiPolygon):
                 continue
-            polygon_vert_list=np.dstack((self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[X],self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[Y])).tolist()[0]
+            polygon_vert_list=np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
             for vert in polygon_vert_list:
-                self.aggregated_polygon_vert_set.add(tuple(vert))
-        self.aggregated_polygon_vert_list = list(self.aggregated_polygon_vert_set)
-        self.aggregated_polygon_vert_dict={k: v for v, k in enumerate(self.aggregated_polygon_vert_list)}    
+                aggregated_polygon_vert_set.add(tuple(vert))
+        self.PALayers_aggregated_polygon_vert_list[layer] = list(aggregated_polygon_vert_set)
+        self.PALayers_aggregated_polygon_vert_dict[layer]={k: v for v, k in enumerate(self.PALayers_aggregated_polygon_vert_list[layer])}    
 
-        """ this code will ignore census sectors with multipolygons and generate sector_vertices_indices_dict from vert_dict and the original kml dataframe (self.aggregated_polygon_mesh)
-        * sector_vertices_indices_dict is a dictionary where the key is a census sector code and the value is a list with the indices of its vertices."""
+        """ this code generates PALayers_aggregated_polygon_vertices_indices_dict[layer] from vert_dict and the original kml dataframe (self.PALayers_mesh[layer])
+        * PALayers_aggregated_polygon_vertices_indices_dict[layer] is a dictionary where the key is an aggregated-polygon code and the value is a list with the indices of its vertices."""
 
-        self.sector_vertices_indices_dict = dict()
-        for sector in self.aggregated_polygon_mesh.index:
-            if(type(self.aggregated_polygon_mesh.geometry[sector])==shapely.geometry.multipolygon.MultiPolygon):
+        self.PALayers_aggregated_polygon_vertices_indices_dict[layer] = dict()
+        for ap in self.PALayers_mesh[layer].index:
+            if(type(self.PALayers_mesh[layer].geometry[ap])==shapely.geometry.multipolygon.MultiPolygon):
               continue
-            polygon_vert_list=np.dstack((self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[X],self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[Y])).tolist()[0]
+            polygon_vert_list=np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
             polygon_vert_ind_list=list()
             for vert in polygon_vert_list:
-                polygon_vert_ind_list.append(self.aggregated_polygon_vert_dict[tuple(vert)])
-            self.sector_vertices_indices_dict[self.aggregated_polygon_mesh[self.key_column][sector]] = polygon_vert_ind_list     
+                polygon_vert_ind_list.append(self.PALayers_aggregated_polygon_vert_dict[layer][tuple(vert)])
+            self.PALayers_aggregated_polygon_vertices_indices_dict[layer][self.PALayers_mesh[layer][self.key_column][ap]] = polygon_vert_ind_list     
 
-        """ this code will ignore census sectors with multipolygons and generate aggregated_polygon_vert_setcens_list from vert_dict and the original kml dataframe (self.aggregated_polygon_mesh)
-        * aggregated_polygon_vert_setcens_list is a list comprised of sets of 1-ring census sectors (represented with its code) of each vertex index."""
+        """ this code generates PALayers_aggregated_polygon_vert_setcens_list[layer] from PALayers_aggregated_polygon_vert_dict[layer] and the original kml dataframe (self.PALayers_mesh[layer])
+        * self.PALayers_aggregated_polygon_vert_setcens_list[layer] is a list comprised of sets of 1-ring polygons (represented with its code) of each vertex index."""
 
-        self.aggregated_polygon_vert_setcens_list = [set() for _ in range(len(self.aggregated_polygon_vert_list))] 
-        for sector in self.aggregated_polygon_mesh.index:
-            if(type(self.aggregated_polygon_mesh.geometry[sector])==shapely.geometry.multipolygon.MultiPolygon):
+        self.PALayers_aggregated_polygon_vert_setcens_list[layer] = [set() for _ in range(len(self.PALayers_aggregated_polygon_vert_list[layer]))] 
+        for ap in self.PALayers_mesh[layer].index:
+            if(type(self.PALayers_mesh[layer].geometry[ap])==shapely.geometry.multipolygon.MultiPolygon):
                 continue
-            polygon_vert_list=np.dstack((self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[X],self.aggregated_polygon_mesh.geometry[sector].exterior.coords.xy[Y])).tolist()[0]
+            polygon_vert_list=np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
             for vert in polygon_vert_list:  
-                self.aggregated_polygon_vert_setcens_list[self.aggregated_polygon_vert_dict[tuple(vert)]].add(self.aggregated_polygon_mesh[self.key_column][sector])
+                self.PALayers_aggregated_polygon_vert_setcens_list[layer][self.PALayers_aggregated_polygon_vert_dict[layer][tuple(vert)]].add(self.PALayers_mesh[layer][self.key_column][ap])
                  
                     
         ''' this code will refine the aggregated polygon mesh to assure the edge lengths are not larger than EDGE_LENGTH_THRESHOLD. 
-        * self.refined_aggregated_polygon_vert_set holds the new (refined) vert set.
-        * self.refined_aggregated_polygon_vert_list holds an (indexed) list of tuples of coordinates of the set of (unique) refined vertices
-        * self.refined_aggregated_polygon_vert_dict is a dictionary of refined vertices where the key is a tuple of lat/long coordinates and the value is the index of self.refined_vert_list
-        * self.refined_aggregated_polygon_vert_correspondence_dict is a dictionary of refined vertices where the key is an index of a refined vertex, and the value is the index to the nearest vertex of the edge that originated the refined vertex through interpolation.
+        * refined_aggregated_polygon_vert_set holds the new (refined) vert set.
+        * self.PALayers_refined_aggregated_polygon_vert_list[layer] holds an (indexed) list of tuples of coordinates of the set of (unique) refined vertices
+        * self.PALayers_refined_aggregated_polygon_vert_dict[layer] is a dictionary of refined vertices where the key is a tuple of lat/long coordinates and the value is the index of self.refined_vert_list
+        * self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer] is a dictionary of refined vertices where the key is an index of a refined vertex, and the value is the index to the nearest vertex of the edge that originated the refined vertex through interpolation.
         '''
         if(EDGE_LENGTH_THRESHOLD<sys.float_info.max-1):
             print('Refining mesh...')
-            self.refined_aggregated_polygon_vert_set = set()
+            refined_aggregated_polygon_vert_set = set()
             refined_vert_coords_correspondence_dict = dict()
             
-            for sector in self.sector_vertices_indices_dict.keys():
-                polygon_vert_list=self.sector_vertices_indices_dict[sector]
+            for sector in self.PALayers_aggregated_polygon_vertices_indices_dict[layer].keys():
+                polygon_vert_list=self.PALayers_aggregated_polygon_vertices_indices_dict[layer][sector]
                 for i in range(len(polygon_vert_list)-1):
-                    vertA = self.aggregated_polygon_vert_list[polygon_vert_list[i]]
-                    vertB = self.aggregated_polygon_vert_list[polygon_vert_list[i+1]]
+                    vertA = self.PALayers_aggregated_polygon_vert_list[layer][polygon_vert_list[i]]
+                    vertB = self.PALayers_aggregated_polygon_vert_list[layer][polygon_vert_list[i+1]]
                     great_circle_dist = ox.distance.great_circle_vec(vertA[0],vertA[1],vertB[0],vertB[1])
                     latlong_dist = ox.distance.euclidean_dist_vec(vertA[0],vertA[1],vertB[0],vertB[1])
                     if(great_circle_dist>EDGE_LENGTH_THRESHOLD):
@@ -321,40 +355,33 @@ class CityHub:
                         num_vert = max(math.ceil(line.length / latlong_threshold), 1)
                         for n in range(num_vert):
                             interpolated_coords = line.interpolate(n / num_vert, normalized=True).coords[0]
-                            if( not interpolated_coords in self.refined_aggregated_polygon_vert_set):
-                                self.refined_aggregated_polygon_vert_set.add(interpolated_coords)
+                            if( not interpolated_coords in refined_aggregated_polygon_vert_set):
+                                refined_aggregated_polygon_vert_set.add(interpolated_coords)
                                 if (n<num_vert/2):
                                     refined_vert_coords_correspondence_dict[interpolated_coords] = polygon_vert_list[i]
                                 else:
                                     refined_vert_coords_correspondence_dict[interpolated_coords] = polygon_vert_list[i+1]
                     else:
-                        self.refined_aggregated_polygon_vert_set.add(vertA)
-                        self.refined_aggregated_polygon_vert_set.add(vertB)
+                        refined_aggregated_polygon_vert_set.add(vertA)
+                        refined_aggregated_polygon_vert_set.add(vertB)
                         refined_vert_coords_correspondence_dict[vertA] = polygon_vert_list[i]
                         refined_vert_coords_correspondence_dict[vertB] = polygon_vert_list[i+1]
             
-            self.refined_aggregated_polygon_vert_list = list(self.refined_aggregated_polygon_vert_set)
-            self.refined_aggregated_polygon_vert_dict={k: v for v, k in enumerate(self.refined_aggregated_polygon_vert_list)}       
-            
-        
-        #    return True
-            for k in self.refined_aggregated_polygon_vert_dict.keys():                
-                ind_refined = self.refined_aggregated_polygon_vert_dict[k]
-      #          print(indic)
+            self.PALayers_refined_aggregated_polygon_vert_list[layer] = list(refined_aggregated_polygon_vert_set)
+            self.PALayers_refined_aggregated_polygon_vert_dict[layer]={k: v for v, k in enumerate(self.PALayers_refined_aggregated_polygon_vert_list[layer])}       
+            self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer] = dict()        
+            for k in self.PALayers_refined_aggregated_polygon_vert_list[layer].keys():                
+                ind_refined = self.PALayers_refined_aggregated_polygon_vert_list[layer][k]
                 ind_original = refined_vert_coords_correspondence_dict[k] 
-     #           print(indcorr)
-              #  print(self.refined_vert_correspondence_dict)
-                self.refined_aggregated_polygon_vert_correspondence_dict[ind_refined] = ind_original
+                self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer][ind_refined] = ind_original
         else:
-            self.refined_aggregated_polygon_vert_list = self.aggregated_polygon_vert_list.copy()
-            self.refined_aggregated_polygon_vert_dict = self.aggregated_polygon_vert_dict.copy()
-            self.refined_aggregated_polygon_vert_correspondence_dict = self.refined_aggregated_polygon_vert_dict
+            self.PALayers_refined_aggregated_polygon_vert_list[layer] = self.PALayers_aggregated_polygon_vert_list[layer].copy()
+            self.PALayers_refined_aggregated_polygon_vert_dict[layer] = self.PALayers_aggregated_polygon_vert_dict[layer].copy()
+            self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer] = self.PALayers_refined_aggregated_polygon_vert_list[layer]
             
             
         if build_tree:
-      #      self.tree = KDTree(np.array(self.vert_list))
-             self.aggregated_polygon_tree = BallTree(np.deg2rad(np.array(self.refined_aggregated_polygon_vert_list)), metric='haversine')
-       #     self.build_aggregated_polygon_tree()
+             self.PALayers_aggregated_polygon_tree[layer] = BallTree(np.deg2rad(np.array(self.PALayers_refined_aggregated_polygon_vert_list[layer])), metric='haversine')
         return True
     
     
@@ -387,45 +414,44 @@ class CityHub:
             
         return True    
     
-     def load_layer_mesh(self, filename, preprocess=True, swap_coordinates=True):
+     def load_RDLayer(self, filename, preprocess=True, swap_coordinates=True):
         """
-        Load a mesh as layer describing a specific area, such as subnormal agglomerates, from a file. KML and SHP formats are accepted. 
-        In case of success, a GeoDataFrame will be created and appended to the list self.layer_meshes.
+        Load a Regional Domain Layer describing a specific area, such as subnormal agglomerates, from a mesh file.
+        KML and SHP formats are accepted. 
+        In case of success, a GeoDataFrame will be created and appended to the list self.RDLayers.
     
         Parameters
         ----------
-        filename : string
-            mesh filename, including the file extension, which will be used to identify the file format.
-        preprocess: bool
-            calls preprocess_layer_mesh if True.
-        swap_coordinates: bool
-            useful when latitude and longitude coordinates are given in the wrong order.
+        filename (string): mesh filename, including the file extension, which will be used to identify the file format.
+        preprocess (bool): calls preprocess_RDLayer if True.
+        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
         
         Returns
         -------
-            returns an integer representing the layer dataframe position in self.layer_meshes if the mesh is sucessfully loaded from file, or -1 otherwise.
+            returns an integer representing the layer dataframe position in self.RDLayers if the mesh is sucessfully 
+            loaded from file, or -1 otherwise.
         """
         extension_str = filename[-3:]
         if(extension_str.lower()=='kml'):
             gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
             try:
-                meshlayerdf = gpd.read_file(filename, driver='KML')
+                rdlayerdf = gpd.read_file(filename, driver='KML')
             except:
                 return -1
         elif(extension_str.lower()=='shp'):
             try:
-                meshlayerdf = gpd.read_file(filename, driver='SHP')
+                rdlayerdf = gpd.read_file(filename, driver='SHP')
             except:
                 return -1
 
-        self.layer_meshes.append(meshlayerdf)
+        self.RDLayers.append(rdlayerdf)
         if preprocess:
-            self.preprocess_layer_mesh(len(self.layer_meshes)-1, True, swap_coordinates)
-        return len(self.layer_meshes)-1
+            self.preprocess_RDLayer(len(self.RDLayers)-1, True, swap_coordinates)
+        return len(self.RDLayers)-1
     
      def load_layer_points(self, filename, zone_number=23, zone_letter='K', build_tree=True, error_x=0.0, error_y=0.0):
         """
-        Load a SHP or KML file made up of places that are georreferenced as single points (positions) in UTM format. Points are converted to lat-long format and stored in self.layer_points[layer]['latlong'] as tuples.
+        Load a SHP or KML file made up of places that are georreferenced as single points (positions) in UTM format. Points are converted to lat-long format and stored in self.PBLayers[layer]['latlong'] as tuples.
     
         Parameters
         ----------
@@ -462,10 +488,10 @@ class CityHub:
                 return -1
         
         
-        self.layer_points.append(pointdf)
-        layer=len(self.layer_points)-1
+        self.PBLayers.append(pointdf)
+        layer=len(self.PBLayers)-1
         if build_tree:
-             self.layers_points_tree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
+             self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
         return True
 
 
@@ -512,31 +538,28 @@ class CityHub:
             pointdf['latlong'] = [(pointdf.iloc[p][lat_key_column],pointdf.iloc[p][lng_key_column]) for p in range(pointdf.shape[0])]
 
 
-        self.layer_points.append(pointdf)
-        layer=len(self.layer_points)-1
+        self.PBLayers.append(pointdf)
+        layer=len(self.PBLayers)-1
         if build_tree:
-             self.layers_points_tree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
-        return True  
+             self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
+        return True
      
-     def preprocess_layer_points(self, layer, swap_coordinates = False):
+     def preprocess_PBLayer(self, layer, swap_coordinates = False):
         """
-        Generate data structures to quickly retrieve relevant information from layer points. The layer must be loaded first.
+        Generate data structures to quickly retrieve relevant information from PBLayer. The layer must be loaded first.
     
         Parameters
         ----------
-        layer: int
-            layer position according to self.layer_points
-        build_tree : bool
-            builds a BallTree for querying
-        swap_coordinates: bool
-            useful when latitude and longitude coordinates are given in the wrong order.
+        layer (int): layer position according to self.PBLayers
+        build_tree (bool): builds a BallTree for querying
+        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
         
         Returns
         -------
             returns True if the preprocessing succeeds.
         """
 
-        if len(self.layer_points)<=layer:
+        if len(self.PBLayers)<=layer:
             return False
         
         X=0
@@ -546,8 +569,8 @@ class CityHub:
             Y=0
 
         vertices_points = [[]] * len(self.city_vert_dict.values())
-        for point in self.layer_points[layer].index:
-            vrt = self.query_point_in_city_mesh(self.layer_points[layer].loc[point]['latlong'][X],self.layer_points[layer].loc[point]['latlong'][Y], True)
+        for point in self.PBLayers[layer].index:
+            vrt = self.query_point_in_city_mesh(self.PBLayers[layer].loc[point]['latlong'][X],self.PBLayers[layer].loc[point]['latlong'][Y], True)
             vertices_points[vrt] = vertices_points[vrt] + [point]
 
         if hasattr(self, 'layer_points_vertices'):
@@ -692,7 +715,6 @@ class CityHub:
         
         self.city_tree_coarse = BallTree(np.deg2rad(np.c_[np.array(self.city_vert_list)]), metric='haversine')
         
-        EARTH_RADIUS = 6371.0
         
         for i in range(len(self.city_vert_list)):
             coords = self.city_vert_list[i]
@@ -704,25 +726,20 @@ class CityHub:
         self.dense_label = [(self.trip_vert_occurrences_starting_density[i]>DENSE_THRESHOLD)*1 for i in range(len(self.trip_vert_occurrences_starting_density))]
 
     
-     def preprocess_layer_mesh(self, layer, build_tree=True, swap_coordinates=True):
+     def preprocess_RDLayer(self, layer, build_tree=True, swap_coordinates=True):
         """
-        Generate data structures to quickly retrieve relevant information from layer meshes. The layer must be loaded first.
+        Generate data structures to quickly retrieve relevant information from RDLayer meshes. The layer must be loaded first.
     
-        Parameters
-        ----------
-        layer: int
-            layer position according to self.layer_meshes
-        build_tree : bool
-            builds a BallTree for querying
-        swap_coordinates: bool
-            useful when latitude and longitude coordinates are given in the wrong order.
+        Parameters:
+        layer (int): layer position according to self.RDLayers.
+        build_tree (bool): builds a BallTree for querying.
+        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
         
-        Returns
-        -------
-            returns True if the preprocessing succeeds.
+        Returns:
+            bool: returns True if the preprocessing succeeds.
         """
         
-        if len(self.layer_meshes)<=layer:
+        if len(self.RDLayers)<=layer:
             return False
         
         X=0
@@ -732,39 +749,35 @@ class CityHub:
             Y=0   
         
         """
-        this code will ignore areas with multipolygons and generate self.layers_vert_set[layer], 
-        self.layers_vert_list[layer] and self.layers_vert_dict[layer] from the layer self.layer_meshes[layer].
+        this code generates self.RDLayers_vert_list[layer] from the layer self.RDLayers[layer].
         * vert_set is the set of vertices tuples
         * vert_list is an (indexed) list of tuples of coordinates of the set of (unique) vertices
         * vert_dict is a dictionary of vertices where the key is a tuple of lat/long coordinates and the value is the index of vert_list
         """
         
-        
         vert_set = set()
-        for area in self.layer_meshes[layer].index:
-            if(type(self.layer_meshes[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
+        for area in self.RDLayers[layer].index:
+            if(type(self.RDLayers[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
               continue    
-            polygon_vert_list=np.dstack((self.layer_meshes[layer].geometry[area].exterior.coords.xy[X],self.layer_meshes[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
+            polygon_vert_list=np.dstack((self.RDLayers[layer].geometry[area].exterior.coords.xy[X],self.RDLayers[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
             for vert in polygon_vert_list:
                 vert_set.add(tuple(vert))
         vert_list = list(vert_set)   
         vert_dict={k: v for v, k in enumerate(vert_list)}
         
-        self.layers_vert_set[layer] = vert_set
-        self.layers_vert_list[layer] = vert_list
-        self.layers_vert_dict[layer] = vert_dict
+        self.RDLayers_vert_list[layer] = vert_list
         
         
         """
-        this code will ignore areas with multipolygons and generate self.layers_area_vertices_indices_dict[layer] from self.layers_vert_dict[layer] and self.layer_meshes[layer]
+        this code will ignore areas with multipolygons and generate self.layers_area_vertices_indices_dict[layer] from self.RDLayers[layer]
         * self.layers_vertices_indices_dict[layer] is a dictionary where the key is an area index and the value is a list with the indices of its vertices.
         """
         
         area_vertices_indices_dict = dict()
-        for area in self.layer_meshes[layer].index:
-            if(type(self.layer_meshes[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
+        for area in self.RDLayers[layer].index:
+            if(type(self.RDLayers[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
               continue
-            polygon_vert_list=np.dstack((self.layer_meshes[layer].geometry[area].exterior.coords.xy[X],self.layer_meshes[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
+            polygon_vert_list=np.dstack((self.RDLayers[layer].geometry[area].exterior.coords.xy[X],self.RDLayers[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
             polygon_vert_ind_list=list()
             for vert in polygon_vert_list:
                 polygon_vert_ind_list.append(vert_dict[tuple(vert)])
@@ -772,15 +785,15 @@ class CityHub:
 
         self.layers_area_vertices_indices_dict[layer]=area_vertices_indices_dict  
         
-        """ this code will ignore areas with multipolygons and generate self.layers_area_vertices_coords_dict[layer] from self.layer_meshes[layer]
+        """ this code will ignore areas with multipolygons and generate self.layers_area_vertices_coords_dict[layer] from self.RDLayers[layer]
         * self.layers_areas_vertices_dict[layer] is a dictionary where the key is an area index, and the value is a list with the coordinates of its vertices
         """
             
         area_vertices_coords_dict = dict()
-        for area in self.layer_meshes[layer].index:
-            if(type(self.layer_meshes[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
+        for area in self.RDLayers[layer].index:
+            if(type(self.RDLayers[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
               continue
-            area_vertices_coords_dict[area] = np.dstack((self.layer_meshes[layer].geometry[area].exterior.coords.xy[X],self.layer_meshes[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
+            area_vertices_coords_dict[area] = np.dstack((self.RDLayers[layer].geometry[area].exterior.coords.xy[X],self.RDLayers[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
         
         self.layers_area_vertices_coords_dict[layer]=area_vertices_coords_dict  
         
@@ -790,18 +803,17 @@ class CityHub:
         """
             
         self.layers_vertices_area_dict[layer] = dict()
-        for area in self.layer_meshes[layer].index:
-            if(type(self.layer_meshes[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
+        for area in self.RDLayers[layer].index:
+            if(type(self.RDLayers[layer].geometry[area])==shapely.geometry.multipolygon.MultiPolygon):
               continue
-            area_vert_list=np.dstack((self.layer_meshes[layer].geometry[area].exterior.coords.xy[X],self.layer_meshes[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
+            area_vert_list=np.dstack((self.RDLayers[layer].geometry[area].exterior.coords.xy[X],self.RDLayers[layer].geometry[area].exterior.coords.xy[Y])).tolist()[0]
             for vert in area_vert_list:
                 vert_ind=vert_dict[tuple(vert)]
                 self.layers_vertices_area_dict[layer][vert_ind] = area
         
             
         if build_tree:
-#            self.layers_tree[layer] = KDTree(np.array(self.layers_vert_list[layer]))
-             self.layers_meshes_tree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.layers_vert_list[layer])]), metric='haversine')
+             self.RDLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.RDLayers_vert_list[layer])]), metric='haversine')
         return True
     
     
@@ -915,9 +927,9 @@ class CityHub:
         else:
              v = v_cand2
                 
-    #    H = nx.ego_graph(self.city_mesh_graph, n=self.city_vert_ind_to_nxind_dict[v], radius=query_radius*1000, center=True, undirected=True, distance='length')
+    #    H = nx.ego_graph(self.city_street_graph, n=self.city_vert_ind_to_nxind_dict[v], radius=query_radius*1000, center=True, undirected=True, distance='length')
     
-        ps=nx.single_source_dijkstra_path(self.city_mesh_graph,self.city_vert_ind_to_nxind_dict[v],cutoff=query_radius*1000.0,weight='length')
+        ps=nx.single_source_dijkstra_path(self.city_street_graph,self.city_vert_ind_to_nxind_dict[v],cutoff=query_radius*1000.0,weight='length')
         
     
         result_nodes = []
@@ -926,13 +938,14 @@ class CityHub:
         return result_nodes  
   
         
-     def query_point_in_polygon_mesh(self, lat, long, return_nearest_index=False):
+     def query_point_in_polygon_mesh(self, layer, lat, long, return_nearest_index=False):
         """
-        Query a point in lat-long format, in degrees, in the aggregated polygon. Requires a BallTree, which will be built if it does not already exist.
+        Query a point in lat-long format, in degrees, in a PALayer. Requires a BallTree, which will be built if it does not already exist.
         refined_aggregated_polygon_vert_list is used to build the tree, but the original vertices will be returned by queries.
     
         Parameters
         ----------
+        layer (float): layer position according to self.PALayers_mesh.
         lat: float
             latitude of the query point
         long: float
@@ -958,24 +971,20 @@ class CityHub:
         if return_nearest_index:
             return v_org
         else:
-            return self.aggregated_polygon_vert_list[v_org]
+            return self.PALayers_aggregated_polygon_vert_list[layer][v_org]
         
-     def query_point_in_mesh_layer(self, lat, long, layer, radius, unique):
+     def query_point_in_RDLayer(self, lat, long, layer, radius, unique=False):
         """
-        Query all points in a mesh layer which are within a distance 'radius' from a query point in lat-long format. Requires a layer BallTree, which will be built if it does not already exist.
+        Query all points in a RDLayer which are within a Euclidian distance 'radius' from a query point in 
+        lat-long format. Requires a layer BallTree, which will be built if it does not already exist.
     
         Parameters
         ----------
-        lat: float
-            latitude of the query point
-        long: float
-            longitude of the query point       
-        layer: int
-            layer position to be searched, according to self.layer_meshes
-        radius: float
-            maximum distance of points to return
-        unique: bool 
-            whether to return a unique point per area, within the distance radius. The nearest point of each area is returned.
+        lat (float): latitude of the query point
+        long (float): longitude of the query point       
+        layer (int): layer position to be searched, according to self.RDLayers
+        radius (float): maximum Euclidian distance to search points, in kilometers
+        unique (bool): whether to return a single point per area (polygon), within the distance radius. The nearest point of each area is returned.
             
         Returns
         -------
@@ -983,16 +992,13 @@ class CityHub:
         """
         
         try:
-            self.layers_meshes_tree[layer]
+            self.RDLayers_balltree[layer]
         except:
             print('BallTree does not exist. building...')
-            #self.layers_tree[layer] = KDTree(np.array(self.layers_vert_list[layer]))
-            self.layers_meshes_tree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.layers_vert_list[layer])]), metric='haversine')
-            
-        EARTH_RADIUS = 6371.0
-            
-        near_point_list=self.layers_meshes_tree[layer].query_radius(convert_deg_query(lat,long),radius/EARTH_RADIUS,return_distance=True,sort_results=True) [0][0]   
-            
+            self.RDLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.RDLayers_vert_list[layer])]), metric='haversine')
+
+        near_point_list=self.RDLayers_balltree[layer].query_radius(convert_deg_query(lat,long),
+                                                                   radius/EARTH_RADIUS,return_distance=True,sort_results=True)[0][0]   
             
         if not unique:
             return near_point_list.tolist()
@@ -1002,49 +1008,43 @@ class CityHub:
         
         for point in near_point_list:
             area = self.layers_vertices_area_dict[layer][point]
-            
             if area not in unique_areas:
                 unique_areas.add(area)
                 unique_list.append(point)
         
         return unique_list
     
-     def query_point_in_points_layer(self, lat, long, layer, radius, return_nearest_indices=False):
+    
+     def query_point_in_PBLayer(self, lat, long, layer, radius, return_nearest_indices=False):
         """
-        Query all points in a points layer which are within a distance 'radius' from a query point in lat-long format. Requires a layer BallTree, which will be built if it does not already exist.
+        Query all points in a PBLayer which are within a Euclidean distance 'radius' from a query point in 
+        lat-long format. Requires a layer BallTree, which will be built if it does not already exist.
     
         Parameters
         ----------
-        lat: float
-            latitude of the query point
-        long: float
-            longitude of the query point
-        layer: int
-            layer to be searched, according to self.layer_meshes
-        radius: float
-            maximum distance of points to return, in kilometers
+        lat (float): latitude of the query point
+        long (float): longitude of the query point       
+        layer (int): layer to be searched, according to its position in self.PBLayers
+        radius (float): maximum Euclidian distance to search points, in kilometers
         return_nearest_indices: bool
             whether to return the nearest point indices (according to vert_list indexing) or a list of lat-long tuples
         Returns
-        -------
-            a list of points within maximum distance to the query point, sorted by distance.
+        -------PALayers_aggregated_polygon_vertices_indices_dict
+            a list of points within maximum distance to the query point, sorted by Euclidean distance.
         """
         
         try:
-            self.layers_points_tree[layer]
+            self.PBLayers_balltree[layer]
         except:
             print('BallTree does not exist. building...')         
-            self.layers_points_tree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.layer_points[layer])]), metric='haversine')
-            
-        EARTH_RADIUS = 6371.0
-        
-        nearest_inds_list=self.layers_points_tree[layer].query_radius(convert_deg_query(lat,long),radius/EARTH_RADIUS,return_distance=True,sort_results=True)[0][0].tolist()
+            self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.PBLayers[layer])]), metric='haversine')
+        nearest_inds_list=self.PBLayers_balltree[layer].query_radius(convert_deg_query(lat,long),
+                                                                     radius/EARTH_RADIUS,return_distance=True,sort_results=True)[0][0].tolist()
         
         if return_nearest_indices:
             return nearest_inds_list
         else:
-            return self.layer_points[layer]['latlong'][nearest_inds_list].tolist()
-        
+            return self.PBLayers[layer]['latlong'][nearest_inds_list].tolist()        
         
         
      def polygons_from_vertex(self, vert_ind):
@@ -1092,12 +1092,13 @@ class CityHub:
                 feature_list.append(dfsearch[feature].to_numpy()[0])
         return feature_list
     
-     def polygon_features_from_coords(self, lat, long, feature):
+     def polygon_features_from_coords(self, layer, lat, long, feature):
         """
         Retrieve a list of features from the the polygons in the star of the nearest vertex to a query point with coordinates (lat,long), among the aggregated polygon vertices.
     
         Parameters
         ----------
+        layer (float): layer position according to self.PALayers_mesh.
         lat: float
             latitude of the query point
         long: float
@@ -1113,7 +1114,7 @@ class CityHub:
             print('invalid feature name '+feature)
             return []
         
-        vert_ind=self.query_point_in_polygon_mesh(lat, long, True)
+        vert_ind=self.query_point_in_polygon_mesh(layer,lat, long, True)
         polygon_list=self.polygons_from_vertex(vert_ind)      
         
         feature_list = []
@@ -1123,7 +1124,7 @@ class CityHub:
         return feature_list
 
 
-     def visualization(self, lat, long, feature, polygon_features):
+     def visualization(self, layer, lat, long, feature, polygon_features):
        """
            Visualization of census sectors close to the closest vertex of a given coordinate.    
         
@@ -1161,13 +1162,13 @@ class CityHub:
                  'weight': 0.7,
                  'fillOpacity': 0.75,
          }).add_child(folium.Popup(i+' : '+str(polygon_features[j]))).add_to(m)
-         polyverts = self.sector_vertices_coords_dict[i]
+         polyverts = self.PALayers_polygon_vertices_dict[layer][i]
          j=j+1
          for vert in polyverts:
              folium.CircleMarker([vert[0],vert[1]], radius=3, color='orange').add_to(m)
 
        folium.CircleMarker([lat,long], radius=7, color='red').add_to(m)                                         #Query point
-       folium.CircleMarker(self.aggregated_polygon_vert_list[self.nearest_vertex_index], radius=7, color='blue').add_to(m)         #Nearest corner to point
+       folium.CircleMarker(self.PALayers_aggregated_polygon_vert_list[layer][self.nearest_vertex_index], radius=7, color='blue').add_to(m)         #Nearest corner to point
 
        folium.LayerControl().add_to(m)
        folium.LatLngPopup().add_to(m)
@@ -1208,10 +1209,10 @@ class CityHub:
 #       transporte
         transporte_indices = ['Pontos_de_onibus','Estacao_de_metro', 'Estacao_de_trem', 'Terminal_de_onibus']
         transporte_list = pd.Series([0.0]*len(transporte_indices), index = transporte_indices)
-        transporte_list['Pontos_de_onibus'] = len(self.query_point_in_points_layer(query_coords[0],query_coords[1],layer_pontodeonibus,0.2))
-        transporte_list['Estacao_de_metro'] = len(self.query_point_in_points_layer(query_coords[0],query_coords[1],layer_estacaodemetro,0.2))
-        transporte_list['Estacao_de_trem'] = len(self.query_point_in_points_layer(query_coords[0],query_coords[1],layer_estacaodetrem,0.2))
-        transporte_list['Terminal_de_onibus'] = len(self.query_point_in_points_layer(query_coords[0],query_coords[1],layer_terminaldeonibus,0.2))
+        transporte_list['Pontos_de_onibus'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_pontodeonibus,0.2))
+        transporte_list['Estacao_de_metro'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_estacaodemetro,0.2))
+        transporte_list['Estacao_de_trem'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_estacaodetrem,0.2))
+        transporte_list['Terminal_de_onibus'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_terminaldeonibus,0.2))
         
         feature_vec = feature_vec.append(transporte_list)  
         
@@ -1413,8 +1414,8 @@ class CityHub:
         if type(query_points)==str:
             if query_points=='all':
                 query_points = [ [self.city_vert_nxind_to_ind_dict[n],
-                                  self.city_mesh_graph.nodes[n]['y'],
-                                  self.city_mesh_graph.nodes[n]['x']] for n in self.city_mesh_graph.nodes() ]
+                                  self.city_street_graph.nodes[n]['y'],
+                                  self.city_street_graph.nodes[n]['x']] for n in self.city_street_graph.nodes() ]
                 query_points = pd.DataFrame(query_points, columns=['corner',lat_column,lng_column])
                 query_points = query_points.set_index('corner')
             else:
@@ -1523,8 +1524,8 @@ class CityHub:
         if type(query_points)==str:
             if query_points=='all':
                 query_points = [ [self.city_vert_nxind_to_ind_dict[n],
-                                  self.city_mesh_graph.nodes[n]['y'],
-                                  self.city_mesh_graph.nodes[n]['x']] for n in self.city_mesh_graph.nodes() ]
+                                  self.city_street_graph.nodes[n]['y'],
+                                  self.city_street_graph.nodes[n]['x']] for n in self.city_street_graph.nodes() ]
                 query_points = pd.DataFrame(query_points, columns=['corner',lat_column,lng_column])
                 query_points = query_points.set_index('corner')
             else:
@@ -1609,8 +1610,8 @@ class CityHub:
            return False
        
        query_points = [ [self.city_vert_nxind_to_ind_dict[n],
-                         self.city_mesh_graph.nodes[n]['y'],
-                         self.city_mesh_graph.nodes[n]['x']] for n in self.city_mesh_graph.nodes() ]
+                         self.city_street_graph.nodes[n]['y'],
+                         self.city_street_graph.nodes[n]['x']] for n in self.city_street_graph.nodes() ]
        query_points = pd.DataFrame(query_points, columns=['corner','lat','lng'])
        query_points = query_points.set_index('corner')
     
