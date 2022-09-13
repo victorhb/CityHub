@@ -168,7 +168,7 @@ class CityHub:
             maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.            
         Returns
         -------
-            returns True if the PA Layer mesh is sucessfully loaded from file.
+            returns the layer index or -1 if it fails.
         """
         
         extension_str = filename[-3:]
@@ -177,15 +177,15 @@ class CityHub:
             try:
                 self.PALayers_mesh.append(gpd.read_file(filename, driver='KML'))
             except:
-                return False
+                return -1
         elif(extension_str.lower()=='shp'):
             try:
                 self.PALayers_mesh.append(aggregated_polygon_mesh=gpd.read_file(filename, driver='SHP'))
             except:
-                return False
+                return -1
         self.PALayers_mesh_keycolumn[len(self.PALayers_mesh)-1]=key_column
         self.preprocess_PALayer_mesh(len(self.PALayers_mesh)-1,True,True,EDGE_LENGTH_THRESHOLD)
-        return True
+        return len(self.PALayers_mesh)-1
 
     
      def save_preprocessed_CityHub(self, filename):
@@ -302,11 +302,11 @@ class CityHub:
         * PALayers_polygon_vertices_dict[layer] is a dictionary where the key is a aggregated-polygon code, and the value is a list with the coordinates of its vertices"""
 
         polygon_vertices_dict = dict()
-        for ap in self.self.PALayers_mesh[layer].index:
-            if(type(self.self.PALayers_mesh[layer].geometry[ap])==shapely.geometry.multipolygon.MultiPolygon):
+        for ap in self.PALayers_mesh[layer].index:
+            if(type(self.PALayers_mesh[layer].geometry[ap])==shapely.geometry.multipolygon.MultiPolygon):
                 continue
-            polygon_vertices_dict[self.PALayers_mesh[layer][self.key_column][ap]] = np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
-        PALayers_polygon_vertices_dict[layer]=polygon_vertices_dict
+            polygon_vertices_dict[self.PALayers_mesh[layer][self.PALayers_mesh_keycolumn[layer]][ap]] = np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
+        self.PALayers_polygon_vertices_dict[layer]=polygon_vertices_dict
         
     
         """ this code generates PALayers_aggregated_polygon_vert_list[layer], PALayers_aggregated_polygon_vert_dict[layer] from the original kml dataframe (self.PALayers_mesh[layer])
@@ -335,7 +335,7 @@ class CityHub:
             polygon_vert_ind_list=list()
             for vert in polygon_vert_list:
                 polygon_vert_ind_list.append(self.PALayers_aggregated_polygon_vert_dict[layer][tuple(vert)])
-            self.PALayers_aggregated_polygon_vertices_indices_dict[layer][self.PALayers_mesh[layer][self.key_column][ap]] = polygon_vert_ind_list     
+            self.PALayers_aggregated_polygon_vertices_indices_dict[layer][self.PALayers_mesh[layer][self.PALayers_mesh_keycolumn[layer]][ap]] = polygon_vert_ind_list     
 
         """ this code generates PALayers_aggregated_polygon_vert_setcens_list[layer] from PALayers_aggregated_polygon_vert_dict[layer] and the original kml dataframe (self.PALayers_mesh[layer])
         * self.PALayers_aggregated_polygon_vert_setcens_list[layer] is a list comprised of sets of 1-ring polygons (represented with its code) of each vertex index."""
@@ -346,7 +346,7 @@ class CityHub:
                 continue
             polygon_vert_list=np.dstack((self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[X],self.PALayers_mesh[layer].geometry[ap].exterior.coords.xy[Y])).tolist()[0]
             for vert in polygon_vert_list:  
-                self.PALayers_aggregated_polygon_vert_setcens_list[layer][self.PALayers_aggregated_polygon_vert_dict[layer][tuple(vert)]].add(self.PALayers_mesh[layer][self.key_column][ap])
+                self.PALayers_aggregated_polygon_vert_setcens_list[layer][self.PALayers_aggregated_polygon_vert_dict[layer][tuple(vert)]].add(self.PALayers_mesh[layer][self.PALayers_mesh_keycolumn[layer]][ap])
                  
                     
         ''' this code will refine the aggregated polygon mesh to assure the edge lengths are not larger than EDGE_LENGTH_THRESHOLD. 
@@ -388,14 +388,14 @@ class CityHub:
             self.PALayers_refined_aggregated_polygon_vert_list[layer] = list(refined_aggregated_polygon_vert_set)
             self.PALayers_refined_aggregated_polygon_vert_dict[layer]={k: v for v, k in enumerate(self.PALayers_refined_aggregated_polygon_vert_list[layer])}       
             self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer] = dict()        
-            for k in self.PALayers_refined_aggregated_polygon_vert_list[layer].keys():                
-                ind_refined = self.PALayers_refined_aggregated_polygon_vert_list[layer][k]
+            for k in self.PALayers_refined_aggregated_polygon_vert_dict[layer].keys():                
+                ind_refined = self.PALayers_refined_aggregated_polygon_vert_dict[layer][k]
                 ind_original = refined_vert_coords_correspondence_dict[k] 
                 self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer][ind_refined] = ind_original
         else:
             self.PALayers_refined_aggregated_polygon_vert_list[layer] = self.PALayers_aggregated_polygon_vert_list[layer].copy()
             self.PALayers_refined_aggregated_polygon_vert_dict[layer] = self.PALayers_aggregated_polygon_vert_dict[layer].copy()
-            self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer] = self.PALayers_refined_aggregated_polygon_vert_list[layer]
+            self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer] = self.PALayers_refined_aggregated_polygon_vert_dict[layer]
             
             
         if build_tree:
@@ -445,8 +445,8 @@ class CityHub:
         
         Returns
         -------
-            returns an integer representing the layer dataframe position in self.RDLayers if the mesh is sucessfully 
-            loaded from file, or -1 otherwise.
+            returns an integer representing the layer dataframe position in self.RDLayers if the mesh is
+            sucessfully loaded from file, or -1 otherwise.
         """
         extension_str = filename[-3:]
         if(extension_str.lower()=='kml'):
@@ -487,7 +487,7 @@ class CityHub:
         
         Returns
         -------
-            returns True if the SHP file is succesfully loaded.
+            returns the layer index or -1 if it fails.
         """
         extension_str = filename[-3:]
         if(extension_str.lower()=='kml'):
@@ -508,7 +508,7 @@ class CityHub:
         layer=len(self.PBLayers)-1
         if build_tree:
              self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
-        return True
+        return layer
 
 
      def load_PBLayer_csv_data(self, layer, filename, lat_key_column, lng_key_column, build_tree=True):
@@ -1036,7 +1036,7 @@ class CityHub:
         vert_ind (int): vertex index (according to city_vert_list indexing)
         Returns
         -------
-            a list of polygon keys, according to self.key_column, or an empty list in case of an issue
+            a list of polygon keys, according to self.PALayers_mesh_keycolumn[layer], or an empty list in case of an issue
         """        
         try:
             self.PALayers_aggregated_polygon_vertices_indices_dict[layer]
