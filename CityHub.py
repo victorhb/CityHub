@@ -235,7 +235,6 @@ class CityHub:
                 vertB = self.city_vert_list[self.city_vert_nxind_to_ind_dict[v]]
                 great_circle_dist = ox.distance.great_circle_vec(vertA[0],vertA[1],vertB[0],vertB[1])
                 latlong_dist = ox.distance.euclidean_dist_vec(vertA[0],vertA[1],vertB[0],vertB[1])
-          #      self.city_street_graph[u][v]['weight'] = great_circle_dist
                 
                 refined_city_vert_set.add(vertA)
                 refined_city_vert_coords_correspondence_dict[vertA] = [self.city_vert_nxind_to_ind_dict[u],self.city_vert_nxind_to_ind_dict[v]]
@@ -561,9 +560,9 @@ class CityHub:
              self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
         return True
      
-     def preprocess_PBLayer(self, layer):
+     def project_PBLayer_to_corners(self, layer):
         """
-        Generate data structures to quickly retrieve relevant information from PBLayer, by projecting points to the nearest city street graph corner. The layer must be loaded first.
+        Projects PBLayer points to the nearest city street graph corner. The layer must be loaded first. 
     
         Parameters
         ----------
@@ -872,8 +871,9 @@ class CityHub:
         
      def query_point_in_graph_radius_in_city_mesh(self, lat, long, query_radius):
         """
-        Query a point in lat-long format, in degrees. First, the nearest graph vertex is found. Than, vertices which are less than 'radius' distance, through the graph's edges, are returned.
-
+        Query a point in lat-long format (in degrees), in the city street graph. 
+        First, the nearest graph vertex is found. Than, vertices which are less than 'radius' distance, using a distance through the graph's edges, are returned.
+        
     
         Parameters
         ----------
@@ -909,9 +909,6 @@ class CityHub:
              v = v_cand1                                                                
         else:
              v = v_cand2
-                
-    #    H = nx.ego_graph(self.city_street_graph, n=self.city_vert_ind_to_nxind_dict[v], radius=query_radius*1000, center=True, undirected=True, distance='length')
-    
         ps=nx.single_source_dijkstra_path(self.city_street_graph,self.city_vert_ind_to_nxind_dict[v],cutoff=query_radius*1000.0,weight='length')
         
     
@@ -921,10 +918,9 @@ class CityHub:
         return result_nodes  
   
         
-     def query_point_in_polygon_mesh(self, layer, lat, long, return_nearest_index=False):
+     def query_point_in_PALayer_mesh(self, layer, lat, long, return_nearest_index=False):
         """
-        Query a point in lat-long format, in degrees, in a PALayer. Requires a BallTree, which will be built if it does not already exist.
-        refined_aggregated_polygon_vert_list is used to build the tree, but the original vertices will be returned by queries.
+        Query a point in lat-long format, in degrees, in a PALayer mesh.
     
         Parameters
         ----------
@@ -942,30 +938,30 @@ class CityHub:
         """        
         
         try:
-            self.aggregated_polygon_tree
+            self.PALayers_aggregated_polygon_tree[layer]
         except:
             print('BallTree does not exist. building...')
-            self.aggregated_polygon_tree = BallTree(np.deg2rad(np.array(self.refined_aggregated_polygon_vert_list)), metric='haversine')
+            self.PALayers_aggregated_polygon_tree[layer] = BallTree(np.deg2rad(np.array(self.PALayers_refined_aggregated_polygon_vert_list[layer])), metric='haversine')
             
-        [dist,v] =self.aggregated_polygon_tree.query(convert_deg_query(lat,long))
+        [dist,v] =self.PALayers_aggregated_polygon_tree[layer].query(convert_deg_query(lat,long))
         
-        v_org = self.refined_aggregated_polygon_vert_correspondence_dict[v[0][0]]
+        v_org = self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer][v[0][0]]
         self.nearest_vertex_index=v_org
         if return_nearest_index:
             return v_org
         else:
             return self.PALayers_aggregated_polygon_vert_list[layer][v_org]
         
-     def query_point_in_RDLayer(self, lat, long, layer, radius, unique=False):
+     def query_point_in_RDLayer(self, layer, lat, long, radius, unique=False):
         """
         Query all points in a RDLayer which are within a Euclidian distance 'radius' from a query point in 
-        lat-long format. Requires a layer BallTree, which will be built if it does not already exist.
+        lat-long format.
     
         Parameters
         ----------
+        layer (int): layer position to be searched, according to self.RDLayers
         lat (float): latitude of the query point
         long (float): longitude of the query point       
-        layer (int): layer position to be searched, according to self.RDLayers
         radius (float): maximum Euclidian distance to search points, in kilometers
         unique (bool): whether to return a single point per area (polygon), within the distance radius. The nearest point of each area is returned.
             
@@ -998,19 +994,19 @@ class CityHub:
         return unique_list
     
     
-     def query_point_in_PBLayer(self, lat, long, layer, radius, return_nearest_indices=False):
+     def query_point_in_PBLayer(self, layer, lat, long, radius, return_nearest_indices=False):
         """
         Query all points in a PBLayer which are within a Euclidean distance 'radius' from a query point in 
-        lat-long format. Requires a layer BallTree, which will be built if it does not already exist.
-    
+        lat-long format.
+        
         Parameters
         ----------
+        layer (int): layer to be searched, according to its position in self.PBLayers
         lat (float): latitude of the query point
         long (float): longitude of the query point       
-        layer (int): layer to be searched, according to its position in self.PBLayers
         radius (float): maximum Euclidian distance to search points, in kilometers
         return_nearest_indices: bool
-            whether to return the nearest point indices (according to vert_list indexing) or a list of lat-long tuples
+            whether to return the nearest point indices (according to PBLayers[layer] indexing) or a list of lat-long tuples
         Returns
         -------PALayers_aggregated_polygon_vertices_indices_dict
             a list of points within maximum distance to the query point, sorted by Euclidean distance.
@@ -1030,47 +1026,51 @@ class CityHub:
             return self.PBLayers[layer]['latlong'][nearest_inds_list].tolist()        
         
         
-     def polygons_from_vertex(self, vert_ind):
+     def polygons_from_PALayer_vertex(self, layer, vert_ind):
         """
         Compute the polygons in the star of the aggregated polygon vertex 'vert_ind'.
     
         Parameters
         ----------
-        vert_ind: int
-            vertex index (according to vert_list indexing)
+        layer (int): layer position according to self.PALayers_mesh
+        vert_ind (int): vertex index (according to city_vert_list indexing)
         Returns
         -------
-            a list of polygon keys, according to self.key_column
+            a list of polygon keys, according to self.key_column, or an empty list in case of an issue
         """        
-        self.nearest_subnormal_list = [a for a, b in self.sector_vertices_indices_dict.items() if vert_ind in b]      
+        try:
+            self.PALayers_aggregated_polygon_vertices_indices_dict[layer]
+        except:
+            return []
+            
+        nearest_subnormal_list = [a for a, b in self.PALayers_aggregated_polygon_vertices_indices_dict[layer].items() if vert_ind in b]      
 
-        return self.nearest_subnormal_list 
+        return nearest_subnormal_list 
     
     
-     def polygon_features_from_vertex(self, vert_ind, feature):
+     def polygon_features_from_PALayer_vertex(self, layer, vert_ind, feature):
         """
         Retrieve a list of features from the the polygons in the star of the aggregated polygon vertex 'vert_ind'.
     
         Parameters
         ----------
-        vert_ind: int
-            vertex index (according to vert_list indexing)
-        feature: string
-            feature name to be retrieved from each neighbour polygon.
+        layer (int): layer position according to self.PALayers_mesh.
+        vert_ind (int): vertex index (according to city_vert_list indexing)
+        feature (string): feature name to be retrieved from each neighbour polygon.
         Returns
         -------
             a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
         """
         
-        if not feature in self.datadf.columns:
+        if not feature in self.PALayers_csv_data[layer].columns:
             print('invalid feature name '+feature)
             return []
         
-        polygon_list=self.polygons_from_vertex(vert_ind)      
+        polygon_list=self.polygons_from_PALayer_vertex(layer,vert_ind)      
         
         feature_list = []
         for polygon in polygon_list:
-            dfsearch = self.datadf.loc[self.datadf[self.csv_polygon_key_column]==int(polygon)]
+            dfsearch = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)]
             if dfsearch.shape[0]>0:
                 feature_list.append(dfsearch[feature].to_numpy()[0])
         return feature_list
@@ -1081,28 +1081,25 @@ class CityHub:
     
         Parameters
         ----------
-        layer (float): layer position according to self.PALayers_mesh.
-        lat: float
-            latitude of the query point
-        long: float
-            longitude of the query point
-        feature: string
-            feature name to be retrieved from each neighbour polygon.
+        layer (int): layer position according to self.PALayers_mesh.
+        lat (float): latitude of the query point.
+        long (float): longitude of the query point.
+        feature (string): feature name to be retrieved from each neighbour polygon.
         Returns
         -------
             a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
         """        
         
-        if not feature in self.datadf.columns:
+        if not feature in self.PALayers_csv_data[layer].columns:
             print('invalid feature name '+feature)
             return []
         
-        vert_ind=self.query_point_in_polygon_mesh(layer,lat, long, True)
-        polygon_list=self.polygons_from_vertex(vert_ind)      
+        vert_ind=self.query_point_in_PALayer_mesh(layer,lat, long, True)
+        polygon_list=self.polygons_from_PALayer_vertex(layer,vert_ind)      
         
         feature_list = []
         for polygon in polygon_list:
-            feature_val = self.datadf.loc[self.datadf[self.csv_polygon_key_column]==int(polygon)][feature].to_numpy()[0]
+            feature_val = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)][feature].to_numpy()[0]
             feature_list.append(feature_val)
         return feature_list
 
@@ -1604,6 +1601,7 @@ class CityHub:
        
        self.measu_estimation = measu_estimation
        return True
+
 
 def convert_deg_query(lat, long):
     return np.array([np.deg2rad(lat),np.deg2rad(long)]).reshape(1,-1)
