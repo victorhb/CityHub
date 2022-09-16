@@ -45,7 +45,10 @@ class CityHub:
          PALayers_mesh (list): The list of the meshes of the Polygon-Aggregated (PA) layers.
          PALayers_mesh_keycolumn (dict): Dictionary of the key column of each PA layer mesh.
          PALayers_csv_keycolumn (dict):  Dictionary of the key column of each PA layer csv data.
-         
+         SMLayers_known_measurements (dict): Dictionary with all time series for each measurement point
+         SMLayers_temp_agg_funcs (dict): Dictionary with the temporal aggregation function for each measurement variable
+         SMLayers_measurements_points_info (DataFrame): Dataframe with information (e.g. lat, lng) of each measurement point      
+         SMLayers_estimated_measurements (DataFrame): DataFrame with estimations for all measurement variables for each corner
          
      """
 
@@ -69,7 +72,7 @@ class CityHub:
         
         ##layers' data
         
-        # Regional Domain (RD) Layer 
+        # Regional-Domain (RD) Layer 
         self.RDLayers = []
         self.RDLayers_balltree = dict()       
         self.RDLayers_vert_list = dict()         
@@ -83,7 +86,6 @@ class CityHub:
         self.PBLayers_csv_lat_key_column = dict()
         self.PBLayers_csv_lng_key_column = dict()
         self.PBLayers_corner_projection_dicts = dict()
-        
         
         # Polygon-Aggregated (PA) Layer
         self.PALayers_mesh = []
@@ -100,7 +102,11 @@ class CityHub:
         self.PALayers_refined_aggregated_polygon_vert_correspondence_dict = dict()
         self.PALayers_aggregated_polygon_tree = dict()
         
-        
+        # Sparse-Measurement (SM) Layer
+        self.SMLayers_known_measurements = dict()
+        self.SMLayers_temp_agg_funcs = dict()
+        self.SMLayers_measurements_points_info = pd.DataFrame()
+        self.SMLayers_estimated_measurements = pd.DataFrame()
         
         #optional feature vectors data
         self.feature_vecs = []
@@ -108,11 +114,6 @@ class CityHub:
         #visualization variables
         self.nearest_vertex_index = 0
         self.nearest_subnormal_list = []
-     
-        #variables from sparse measurements
-        self.station_measu = dict()
-        self.measu_temp_agg_funcs = dict()
-        self.station_info = pd.DataFrame()
 
         if not self.load_city_street_graph(filename):
             print('Cannot open '+filename)
@@ -1204,26 +1205,26 @@ class CityHub:
         feature_vec = feature_vec.append(favela_list)    
 
 #       weather        
-        feature_vec = feature_vec.append(self.measu_estimation.loc[vert_ind,:])
+        feature_vec = feature_vec.append(self.SMLayers_estimated_measurements.loc[vert_ind,:])
         
         return feature_vec
 
      def compute_all_feature_vectors(self):
         self.feature_vecs = [self.compute_feature_vector(vert_ind) for vert_ind in range(len(self.city_vert_list))]
      
-     def load_station_measurements(self, station, measu_filename):
+     def load_SMLayers_known_measurements(self, measu_point_name, measu_filename):
         """
         Load a dataframe from csv file corresponding to time series of
-        measurements taken a single place tagged 'station'.
+        measurements taken on a single measurement point tagged 'measu_point_name'.
     
         Parameters
         ----------
-        station : str
-            tag for the name of the measurement station.
+        measu_point_name : str
+            tag for the name of the measurement measu_point_name.
         
         measu_filename : str
             filename in csv format containing temporal informations about
-            measurements from a single place.
+            measurements from a single measurement point.
         
         Returns
         -------
@@ -1231,15 +1232,15 @@ class CityHub:
         """
                                               
         try:
-            self.station_measu[station] = pd.read_csv(measu_filename, sep=';')
+            self.SMLayers_known_measurements[measu_point_name] = pd.read_csv(measu_filename, sep=';')
         except:
             return False
         
-        self.station_measu[station] = self.station_measu[station].set_index('Data')
-        self.station_measu[station].index = pd.to_datetime(self.station_measu[station].index,dayfirst=True)
+        self.SMLayers_known_measurements[measu_point_name] = self.SMLayers_known_measurements[measu_point_name].set_index('Data')
+        self.SMLayers_known_measurements[measu_point_name].index = pd.to_datetime(self.SMLayers_known_measurements[measu_point_name].index,dayfirst=True)
         return True
     
-     def load_measu_temp_agg_funcs(self, info_filename):
+     def load_SMLayers_temp_agg_funcs(self, info_filename):
        """
        Load a dataframe from csv file corresponding to informations about all
        measurement temporal aggregation functions (e.g. sum, mean, max, min).
@@ -1256,25 +1257,25 @@ class CityHub:
        """
                                              
        try:
-           self.measu_temp_agg_funcs = pd.read_csv(info_filename, sep=';')
+           self.SMLayers_temp_agg_funcs = pd.read_csv(info_filename, sep=';')
        except:
            return False
        
-       self.measu_temp_agg_funcs = self.measu_temp_agg_funcs.set_index('Measu_Name')
-       self.measu_temp_agg_funcs = self.measu_temp_agg_funcs["Temp_Agg_Func"].to_dict()
+       self.SMLayers_temp_agg_funcs = self.SMLayers_temp_agg_funcs.set_index('Measu_Name')
+       self.SMLayers_temp_agg_funcs = self.SMLayers_temp_agg_funcs["Temp_Agg_Func"].to_dict()
        return True 
     
-     def load_station_info(self, info_filename):
+     def load_SMLayers_measurements_points_info(self, info_filename):
         """
         Load a dataframe from csv file corresponding to informations about all
-        measurement stations (e.g. lat, lng, initial measurement date, final
+        measurement points (e.g. lat, lng, initial measurement date, final
         measurement date).
     
         Parameters
         ----------        
         info_filename : str
             filename in csv format containing informations about all
-            measurement stations.
+            measurement points.
         
         Returns
         -------
@@ -1282,13 +1283,13 @@ class CityHub:
         """
                                               
         try:
-            self.station_info = pd.read_csv(info_filename, sep=';')
+            self.SMLayers_measurements_points_info = pd.read_csv(info_filename, sep=';')
         except:
             return False
         
-        self.station_info['INITIAL DATE'] = pd.to_datetime(self.station_info['INITIAL DATE'],dayfirst=True)
-        self.station_info['FINAL DATE'] = pd.to_datetime(self.station_info['FINAL DATE'],dayfirst=True)
-        self.station_info = self.station_info.set_index('STATION')
+        self.SMLayers_measurements_points_info['INITIAL DATE'] = pd.to_datetime(self.SMLayers_measurements_points_info['INITIAL DATE'],dayfirst=True)
+        self.SMLayers_measurements_points_info['FINAL DATE'] = pd.to_datetime(self.SMLayers_measurements_points_info['FINAL DATE'],dayfirst=True)
+        self.SMLayers_measurements_points_info = self.SMLayers_measurements_points_info.set_index('MEASUREMENT_POINT')
         return True
      
      def kernel_estimation(self, X, Xm, Ym):
@@ -1339,14 +1340,15 @@ class CityHub:
      def sparse_ts_estimation(self, measu_name, initial_date, final_date, query_points = 'all', lat_column = 'lat', lng_column = 'lng'):
         """
         Estimates time series of measurement measu_name from initial_date to
-        final_date in points query_points based on time series measured in
-        stations. Manage initial and final dates to use stations correctly.
+        final_date in points query_points based on time series measured at the
+        measurement points. Manage initial and final dates to use measurement
+        points correctly.
     
         Parameters
         ----------        
         measu_name : str
-            column name from self.station_measurements which estimation will
-            be made.
+            column name from self.SMLayers_known_measurements which estimation
+            will be made.
             
         initial_date : str
             date (in format dd-mm-yyyy) from which estimation will be made.
@@ -1368,10 +1370,10 @@ class CityHub:
         
         Returns
         -------
-            returns a dataframe 2-array of shape (num_query_points, num_time_steps),
-            or False if parameters passed were not possible to make estimations.
-            If a dataframe is passed in query_points, dataframe returned is input
-            dataframe with added columns.
+            returns a dataframe of shape (num_query_points, num_time_steps),
+            or False if parameters passed were not possible to make
+            estimations. If a dataframe is passed in query_points, dataframe
+            returned is input dataframe with added columns.
         """
         
         initial_date = pd.to_datetime(initial_date,dayfirst=True)
@@ -1381,14 +1383,14 @@ class CityHub:
             print('Initial date must be older than final date')
             return False
         
-        older_station_initial_date = self.station_info['INITIAL DATE'].min()
-        if initial_date < older_station_initial_date:
-            print('Older initial date possible: {}'.format(older_station_initial_date))
+        older_measurements_points_initial_date = self.SMLayers_measurements_points_info['INITIAL DATE'].min()
+        if initial_date < older_measurements_points_initial_date:
+            print('Older initial date possible: {}'.format(older_measurements_points_initial_date))
             return False
         
-        sooner_station_final_date = self.station_info['FINAL DATE'].max()
-        if final_date > sooner_station_final_date:
-            print('Sooner final date possible: {}'.format(sooner_station_final_date))
+        sooner_measurements_points_initial_date = self.SMLayers_measurements_points_info['FINAL DATE'].max()
+        if final_date > sooner_measurements_points_initial_date:
+            print('Sooner final date possible: {}'.format(sooner_measurements_points_initial_date))
             return False
         
         if type(query_points)==str:
@@ -1401,7 +1403,7 @@ class CityHub:
             else:
                 print('query_points must be dataframe or str \'all\'')
             
-        critical_dates = pd.unique(pd.concat( (self.station_info['INITIAL DATE'],self.station_info['FINAL DATE']) ))
+        critical_dates = pd.unique(pd.concat( (self.SMLayers_measurements_points_info['INITIAL DATE'],self.SMLayers_measurements_points_info['FINAL DATE']) ))
         critical_dates = critical_dates[(critical_dates>initial_date)&(critical_dates<final_date)]
         critical_dates = list(critical_dates) + [final_date]
         critical_dates.sort()
@@ -1410,17 +1412,17 @@ class CityHub:
         slice_initial_date = initial_date
         for critical_date in critical_dates:
             slice_final_date = critical_date
-            available_stations = self.station_info.loc[(self.station_info['INITIAL DATE'] <= slice_initial_date) &
-                                                          (self.station_info['FINAL DATE'] >= slice_final_date)]
+            available_measurement_points = self.SMLayers_measurements_points_info.loc[(self.SMLayers_measurements_points_info['INITIAL DATE'] <= slice_initial_date) &
+                                                          (self.SMLayers_measurements_points_info['FINAL DATE'] >= slice_final_date)]
             
-            available_measu = pd.DataFrame(columns=available_stations.index)
-            for station in available_stations.index:
-                available_measu[station] = self.station_measu[station][measu_name].loc[
-                                           (pd.to_datetime(self.station_measu[station].index)>=slice_initial_date)&
-                                           (pd.to_datetime(self.station_measu[station].index)< slice_final_date)]
+            available_measu = pd.DataFrame(columns=available_measurement_points.index)
+            for measurement_point in available_measurement_points.index:
+                available_measu[measurement_point] = self.SMLayers_known_measurements[measurement_point][measu_name].loc[
+                                           (pd.to_datetime(self.SMLayers_known_measurements[measurement_point].index)>=slice_initial_date)&
+                                           (pd.to_datetime(self.SMLayers_known_measurements[measurement_point].index)< slice_final_date)]
                     
             slice_estimation = self.kernel_estimation(np.array([query_points[lat_column],query_points[lng_column]]).T,
-                                                      np.array([available_stations['LAT'],available_stations['LNG']]).T,
+                                                      np.array([available_measurement_points['LAT'],available_measurement_points['LNG']]).T,
                                                       np.array(available_measu))
             
             slice_estimation = pd.DataFrame(slice_estimation,columns=available_measu.index)
@@ -1438,21 +1440,22 @@ class CityHub:
     
      def sparse_agg_estimation(self, measu_name, temp_agg_func, initial_date, final_date, query_points = 'all', lat_column = 'lat', lng_column = 'lng'):
         """
-        Aggregate measurements in measu_name from initial_date to
-        final_date using temp_agg_func to obtain a single number for each
-        station. Then estimates the measurement in points query_points based
-        on these numbers. Only stations with measurements in all time slots
+        Aggregate measurements measu_name from initial_date to final_date
+        using temp_agg_func to obtain a single number for each measurement
+        point. Then estimates the measurement in query_points based on these
+        numbers. Only measurement points with measurements in all time slots
         between initial_date and final_date are used.
     
         Parameters
         ----------        
         measu_names : str
-            column name from self.station_measurements which estimation will
-            be made.
+            column name from self.SMLayers_known_measurements which estimation
+            will be made.
         
         temp_agg_func : str
             string with function to be used in the temporal aggregation of
-            measuarements for each station (can be sum, mean, min or max).
+            measuarements for each measurement point (can be sum, mean, min or
+            max).
         
         initial_date : str
             date (in format dd-mm-yyyy) from which estimation will be made.
@@ -1474,7 +1477,7 @@ class CityHub:
         
         Returns
         -------
-            returns a dataframe 2-array of shape (num_query_points, num_time_steps),
+            returns a dataframe of shape (num_query_points, num_time_steps),
             or False if parameters passed were not possible to make estimations.
             If a dataframe is passed in query_points, dataframe returned is input
             dataframe with added columns.
@@ -1491,14 +1494,14 @@ class CityHub:
             print('Initial date must be older than final date')
             return False
         
-        older_station_initial_date = self.station_info['INITIAL DATE'].min()
-        if initial_date < older_station_initial_date:
-            print('Older initial date possible: {}'.format(older_station_initial_date))
+        older_measurements_points_initial_date = self.SMLayers_measurements_points_info['INITIAL DATE'].min()
+        if initial_date < older_measurements_points_initial_date:
+            print('Older initial date possible: {}'.format(older_measurements_points_initial_date))
             return False
         
-        sooner_station_final_date = self.station_info['FINAL DATE'].max()
-        if final_date > sooner_station_final_date:
-            print('Sooner final date possible: {}'.format(sooner_station_final_date))
+        sooner_measurements_points_initial_date = self.SMLayers_measurements_points_info['FINAL DATE'].max()
+        if final_date > sooner_measurements_points_initial_date:
+            print('Sooner final date possible: {}'.format(sooner_measurements_points_initial_date))
             return False
         
         if type(query_points)==str:
@@ -1511,25 +1514,25 @@ class CityHub:
             else:
                 print('query_points must be dataframe or str \'all\'')
             
-        available_stations = self.station_info.loc[(self.station_info['INITIAL DATE'] <= initial_date) &
-                                                          (self.station_info['FINAL DATE'] >= final_date)]
+        available_measurement_points = self.SMLayers_measurements_points_info.loc[(self.SMLayers_measurements_points_info['INITIAL DATE'] <= initial_date) &
+                                                          (self.SMLayers_measurements_points_info['FINAL DATE'] >= final_date)]
 
         agg_measu = pd.DataFrame(columns=[measu_name])
-        for station in available_stations.index:
-            ts = self.station_measu[station][measu_name].loc[
-                                       (pd.to_datetime(self.station_measu[station].index)>=initial_date)&
-                                       (pd.to_datetime(self.station_measu[station].index)< final_date)]
+        for measurement_point in available_measurement_points.index:
+            ts = self.SMLayers_known_measurements[measurement_point][measu_name].loc[
+                                       (pd.to_datetime(self.SMLayers_known_measurements[measurement_point].index)>=initial_date)&
+                                       (pd.to_datetime(self.SMLayers_known_measurements[measurement_point].index)< final_date)]
             if temp_agg_func=='sum':
-                agg_measu.loc[station,:] = ts.sum()
+                agg_measu.loc[measurement_point,:] = ts.sum()
             elif temp_agg_func=='mean':
-                agg_measu.loc[station,:] = ts.mean()
+                agg_measu.loc[measurement_point,:] = ts.mean()
             elif temp_agg_func=='min':
-                agg_measu.loc[station,:] = ts.min()
+                agg_measu.loc[measurement_point,:] = ts.min()
             else:
-                agg_measu.loc[station,:] = ts.max()
+                agg_measu.loc[measurement_point,:] = ts.max()
         
         measu_estimation = self.kernel_estimation(np.array([query_points[lat_column],query_points[lng_column]]).T,
-                                                  np.array([available_stations['LAT'],available_stations['LNG']]).T,
+                                                  np.array([available_measurement_points['LAT'],available_measurement_points['LNG']]).T,
                                                   np.array(agg_measu).T)
         measu_estimation = pd.DataFrame(measu_estimation,columns=[measu_name])
         measu_estimation[query_points.index.name] = query_points.index
@@ -1537,13 +1540,14 @@ class CityHub:
         
         return measu_estimation
     
-     def compute_layer_weather(self, initial_date, final_date):
+     def compute_layer_sparse(self, initial_date, final_date):
        """
        Aggregate measurements from all sparse variable from initial_date to
-       final_date using temp_agg_funcs given by self.temp_agg_funcs to obtain
-       a single number for each station. Then estimates the measurement in all
-       graph vertices based on these numbers. Only stations with measurements
-       in all time slots between initial_date and final_date are used.
+       final_date using temp_agg_funcs given by self.SMLayers_temp_agg_funcs
+       to obtain a single number for each measurement point. Then estimates
+       the measurement in all graph vertices based on these numbers. Only
+       measurement points with measurements in all time slots between
+       initial_date and final_date are used.
    
        Parameters
        ----------                      
@@ -1556,17 +1560,17 @@ class CityHub:
        Returns
        -------
            returns True if the computation if sucessfull (this method modifies
-           the property self.measu_estimation).
+           the property self.SMLayers_estimated_measurements).
        """
        
-       station = self.station_info.index[0]
-       measu_names = list(self.station_measu[station].columns)
-       for station in self.station_info.index:
-           if list(self.station_measu[station].columns) != measu_names:
-               print('All station measurements must have the same name.')
+       measurement_point = self.SMLayers_measurements_points_info.index[0]
+       measu_names = list(self.SMLayers_known_measurements[measurement_point].columns)
+       for measurement_point in self.SMLayers_measurements_points_info.index:
+           if list(self.SMLayers_known_measurements[measurement_point].columns) != measu_names:
+               print('All measurement variables must have the same name.')
                return False
        
-       temp_agg_funcs = self.measu_temp_agg_funcs.values()
+       temp_agg_funcs = self.SMLayers_temp_agg_funcs.values()
        for temp_agg_func in temp_agg_funcs:
            if temp_agg_func not in ['sum', 'mean', 'min', 'max']:
                print('Possible temp_agg_func strings: \'sum\', \'mean\', \'min\' or \'max\'.')
@@ -1579,14 +1583,14 @@ class CityHub:
        initial_date = pd.to_datetime(initial_date,dayfirst=True)
        final_date = pd.to_datetime(final_date,dayfirst=True)
        
-       older_station_initial_date = self.station_info['INITIAL DATE'].min()
-       if initial_date < older_station_initial_date:
-           print('Older initial date possible: {}'.format(older_station_initial_date))
+       older_measurements_points_initial_date = self.SMLayers_measurements_points_info['INITIAL DATE'].min()
+       if initial_date < older_measurements_points_initial_date:
+           print('Older initial date possible: {}'.format(older_measurements_points_initial_date))
            return False
        
-       sooner_station_final_date = self.station_info['FINAL DATE'].max()
-       if final_date > sooner_station_final_date:
-           print('Sooner final date possible: {}'.format(sooner_station_final_date))
+       sooner_measurements_points_initial_date = self.SMLayers_measurements_points_info['FINAL DATE'].max()
+       if final_date > sooner_measurements_points_initial_date:
+           print('Sooner final date possible: {}'.format(sooner_measurements_points_initial_date))
            return False
        
        query_points = [ [self.city_vert_nxind_to_ind_dict[n],
@@ -1597,9 +1601,9 @@ class CityHub:
     
        measu_estimation = pd.DataFrame(columns=measu_names)
        for measu_name in measu_names:
-           measu_estimation[measu_name] = self.sparse_agg_estimation(measu_name, self.measu_temp_agg_funcs[measu_name], initial_date, final_date, query_points)
+           measu_estimation[measu_name] = self.sparse_agg_estimation(measu_name, self.SMLayers_temp_agg_funcs[measu_name], initial_date, final_date, query_points)
        
-       self.measu_estimation = measu_estimation
+       self.SMLayers_estimated_measurements = measu_estimation
        return True
 
 
