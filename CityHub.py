@@ -44,7 +44,8 @@ class CityHub:
          PBLayers_corner_projection_dicts (dict): Dictionary of dictionaries, being one for each corner of the city street graph, holding points from the corresponding PBLayer that are projected to that corner.
          PALayers_mesh (list): The list of the meshes of the Polygon-Aggregated (PA) layers.
          PALayers_mesh_keycolumn (dict): Dictionary of the key column of each PA layer mesh.
-         PALayers_csv_keycolumn (dict):  Dictionary of the key column of each PA layer csv data.
+         PALayers_csv_data (dict): Dictionary of dataframes of each PA layer, holding data from CSV files.  
+         PALayers_csv_keycolumn (dict):  Dictionary of the key column of each PA layer CSV data.
          SMLayers_known_measurements (dict): Dictionary with all time series for each measurement point
          SMLayers_temp_agg_funcs (dict): Dictionary with the temporal aggregation function for each measurement variable
          SMLayers_measurements_points_info (DataFrame): Dataframe with information (e.g. lat, lng) of each measurement point      
@@ -1335,6 +1336,11 @@ class CityHub:
         Knorm = K / K.sum(axis=1).reshape((N,1)) #for np array
         Y = Knorm @ Ym.T
         return Y
+
+      def kernel_estimation(self, X, Xm, Ym, K, hyperparameters):
+         
+        .....
+        Knorm = K(hyperparameters,input_nparray) / K.sum(axis=1).reshape((N,1)) #for np array
         
          
      def sparse_ts_estimation(self, measu_name, initial_date, final_date, query_points = 'all', lat_column = 'lat', lng_column = 'lng'):
