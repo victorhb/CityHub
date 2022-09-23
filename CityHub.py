@@ -1292,11 +1292,46 @@ class CityHub:
         self.SMLayers_measurements_points_info['FINAL DATE'] = pd.to_datetime(self.SMLayers_measurements_points_info['FINAL DATE'],dayfirst=True)
         self.SMLayers_measurements_points_info = self.SMLayers_measurements_points_info.set_index('MEASUREMENT_POINT')
         return True
-     
-     def kernel_estimation(self, X, Xm, Ym):
+
+     def kernel_gaussian(self, X, Xm, sigma):
+        """
+        Apply gaussian kernel centered at measurement points Xm with
+        standard deviation sigma and assess kernel coefficients at X.
+        
+        Parameters
+        ----------        
+        X : 2-array
+            Nx2 array indicating lat-lng location of each point in which
+            estimation will be made (N = number of points of interest).
+            
+        Xm : 2-array
+            Mx2 array indicating lat-lng location of each measurement point on
+            which estimaton will be based (M = number of points of known
+            measurements).
+            
+        sigma : float
+            Standard deviation of the gaussian kernel employed.
+        
+        Returns
+        -------
+            returns a NxM array indicating the kernel coefficient for each
+            point of interest versus each measurement point.
+        """
+        
+        # Compute all distances between X and Xm
+        M = Xm.shape[0]
+        D = [ ox.distance.great_circle_vec(X[:,0],X[:,1],Xm[m,0],Xm[m,1]) for m in range(M) ]
+        D = np.array(D).T
+        
+        # Compute kernel coefficientes
+        K = np.exp(-(D/sigma)**2/2)
+        return K
+
+     def kernel_estimation(self, X, Xm, Ym, kernel_function='auto'):
         """
         Auxiliar function for sparse_estimation(). Uses kernel coefficients to
-        estimate outputs from X based on known Xm to Ym mapping.
+        estimate outputs from X based on known Xm to Ym mapping and
+        kernel_function.
     
         Parameters
         ----------        
@@ -1313,37 +1348,38 @@ class CityHub:
             TxM array indicating time series measured in each measurement
             point (T = number of time slots).
         
+        kernel_function : function or 'auto'
+            function expecting as input X (Nx2) and Xm (Mx2) as above and
+            returning a NxM array of kernel coefficients for each point of
+            interest versus each measurement point. By default ('auto'),
+            computes coefficients using a gaussian kernel with standard
+            deviation equals half the average distance between two different
+            measurement point.
+        
         Returns
         -------
             returns a NxT array indicating estimation for each point of
             interest and time slot.
         """
         
-        # Compute all distances between elements of X and Xm
         M = Xm.shape[0]
         N = X.shape[0]
         if M==1:
             Y = np.tile( Ym.T , (N,1) )
             return Y
         
-        D = [ ox.distance.great_circle_vec(X[:,0],X[:,1],Xm[m,0],Xm[m,1]) for m in range(M) ]
-        D = np.array(D).T
-        
-        # Get kernel coefficientes and make estimations
-        sig = .5*np.mean([ ox.distance.great_circle_vec(Xm[i,0],Xm[i,1],Xm[j,0],Xm[j,1]) for i in range(M) for j in range(1+i,M)])
-        K = np.exp(-(D/sig)**2/2)
+        if kernel_function=='auto':
+            sigma = .5*np.mean([ ox.distance.great_circle_vec(Xm[i,0],Xm[i,1],Xm[j,0],Xm[j,1]) for i in range(M) for j in range(1+i,M)])
+            K = self.kernel_gaussian(X,Xm,sigma)
+        else:
+            K = kernel_function(X,Xm)
         #Knorm = K.div(K.sum(axis=1), axis=0) #for pd dataframe
         Knorm = K / K.sum(axis=1).reshape((N,1)) #for np array
         Y = Knorm @ Ym.T
         return Y
-
-      def kernel_estimation(self, X, Xm, Ym, K, hyperparameters):
-         
-        .....
-        Knorm = K(hyperparameters,input_nparray) / K.sum(axis=1).reshape((N,1)) #for np array
         
          
-     def sparse_ts_estimation(self, measu_name, initial_date, final_date, query_points = 'all', lat_column = 'lat', lng_column = 'lng'):
+     def sparse_ts_estimation(self, measu_name, initial_date, final_date, query_points='all', lat_column='lat', lng_column='lng', kernel_function='auto'):
         """
         Estimates time series of measurement measu_name from initial_date to
         final_date in points query_points based on time series measured at the
@@ -1373,6 +1409,14 @@ class CityHub:
             
         lng_column : str
             name of the column with longitude information.
+        
+        kernel_function : function or 'auto'
+            function expecting as input X (Nx2) and Xm (Mx2) as above and
+            returning a NxM array of kernel coefficients for each point of
+            interest versus each measurement point. By default ('auto'),
+            computes coefficients using a gaussian kernel with standard
+            deviation equals half the average distance between two different
+            measurement point.
         
         Returns
         -------
@@ -1429,7 +1473,8 @@ class CityHub:
                     
             slice_estimation = self.kernel_estimation(np.array([query_points[lat_column],query_points[lng_column]]).T,
                                                       np.array([available_measurement_points['LAT'],available_measurement_points['LNG']]).T,
-                                                      np.array(available_measu))
+                                                      np.array(available_measu),
+                                                      kernel_function)
             
             slice_estimation = pd.DataFrame(slice_estimation,columns=available_measu.index)
             slice_estimation[query_points.index.name] = query_points.index
@@ -1444,7 +1489,7 @@ class CityHub:
         
         return measu_estimation
     
-     def sparse_agg_estimation(self, measu_name, temp_agg_func, initial_date, final_date, query_points = 'all', lat_column = 'lat', lng_column = 'lng'):
+     def sparse_agg_estimation(self, measu_name, temp_agg_func, initial_date, final_date, query_points='all', lat_column='lat', lng_column='lng', kernel_function='auto'):
         """
         Aggregate measurements measu_name from initial_date to final_date
         using temp_agg_func to obtain a single number for each measurement
@@ -1480,6 +1525,14 @@ class CityHub:
             
         lng_column : str
             name of the column with longitude information.
+        
+        kernel_function : function or 'auto'
+            function expecting as input X (Nx2) and Xm (Mx2) as above and
+            returning a NxM array of kernel coefficients for each point of
+            interest versus each measurement point. By default ('auto'),
+            computes coefficients using a gaussian kernel with standard
+            deviation equals half the average distance between two different
+            measurement point.
         
         Returns
         -------
@@ -1539,14 +1592,15 @@ class CityHub:
         
         measu_estimation = self.kernel_estimation(np.array([query_points[lat_column],query_points[lng_column]]).T,
                                                   np.array([available_measurement_points['LAT'],available_measurement_points['LNG']]).T,
-                                                  np.array(agg_measu).T)
+                                                  np.array(agg_measu).T,
+                                                  kernel_function)
         measu_estimation = pd.DataFrame(measu_estimation,columns=[measu_name])
         measu_estimation[query_points.index.name] = query_points.index
         measu_estimation = measu_estimation.set_index(query_points.index.name)
         
         return measu_estimation
     
-     def compute_layer_sparse(self, initial_date, final_date):
+     def compute_layer_sparse(self, initial_date, final_date, kernel_function='auto'):
        """
        Aggregate measurements from all sparse variable from initial_date to
        final_date using temp_agg_funcs given by self.SMLayers_temp_agg_funcs
@@ -1562,6 +1616,14 @@ class CityHub:
            
        final_date : str
            date (in format dd-mm-yyyy) until which estimation will be made.
+       
+       kernel_function : function or 'auto'
+           function expecting as input X (Nx2) and Xm (Mx2) as above and
+           returning a NxM array of kernel coefficients for each point of
+           interest versus each measurement point. By default ('auto'),
+           computes coefficients using a gaussian kernel with standard
+           deviation equals half the average distance between two different
+           measurement point.
        
        Returns
        -------
@@ -1607,7 +1669,7 @@ class CityHub:
     
        measu_estimation = pd.DataFrame(columns=measu_names)
        for measu_name in measu_names:
-           measu_estimation[measu_name] = self.sparse_agg_estimation(measu_name, self.SMLayers_temp_agg_funcs[measu_name], initial_date, final_date, query_points)
+           measu_estimation[measu_name] = self.sparse_agg_estimation(measu_name, self.SMLayers_temp_agg_funcs[measu_name], initial_date, final_date, query_points, kernel_function=kernel_function)
        
        self.SMLayers_estimated_measurements = measu_estimation
        return True
