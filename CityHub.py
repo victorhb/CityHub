@@ -120,7 +120,18 @@ class CityHub:
             print('Cannot open '+filename)
             return
         self.preprocess_city_mesh(True,EDGE_LENGTH_THRESHOLD)
-            
+    
+     def save_preprocessed_CityHub(self, filename):
+        """
+        Save preprocessed data structures of a city street graph to a pickle file .
+    
+        Parameters
+        ----------
+        filename : string
+            Pickle filename to be written.
+        """
+        pickle.dump(self, open(filename, 'wb'))
+
      def load_city_street_graph(self, city_string):
         """
         Load a city street graph from OMSnx library city query string, or a gpickle.
@@ -152,56 +163,9 @@ class CityHub:
             
         self.city_street_graph=self.city_street_graph.to_undirected()
     
-        return True        
-    
-    
-     def load_PALayer_mesh(self, filename, key_column = 'Name', EDGE_LENGTH_THRESHOLD=sys.float_info.max):
-        """
-        Load a Polygon-Aggregated Layer mesh from a file for polygon-aggregated data purposes, 
-        such as census sectors data. KML and SHP formats are accepted.
-    
-        Parameters
-        ----------
-        filename : string
-            city mesh filename, including the file extension, which will be used to identify the file format.
-        key_column : string
-            name of the key column of each polygon (or row of the dataframe)
-        EDGE_LENGTH_THRESHOLD: float
-            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.            
-        Returns
-        -------
-            returns the layer index or -1 if it fails.
-        """
-        
-        extension_str = filename[-3:]
-        if(extension_str.lower()=='kml'):
-            gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
-            try:
-                self.PALayers_mesh.append(gpd.read_file(filename, driver='KML'))
-            except:
-                return -1
-        elif(extension_str.lower()=='shp'):
-            try:
-                self.PALayers_mesh.append(aggregated_polygon_mesh=gpd.read_file(filename, driver='SHP'))
-            except:
-                return -1
-        self.PALayers_mesh_keycolumn[len(self.PALayers_mesh)-1]=key_column
-        self.preprocess_PALayer_mesh(len(self.PALayers_mesh)-1,True,True,EDGE_LENGTH_THRESHOLD)
-        return len(self.PALayers_mesh)-1
+        return True  
 
     
-     def save_preprocessed_CityHub(self, filename):
-        """
-        Save preprocessed data structures of a city street graph to a pickle file .
-    
-        Parameters
-        ----------
-        filename : string
-            Pickle filename to be written.
-        """
-        pickle.dump(self, open(filename, 'wb'))
-        
-        
      def preprocess_city_mesh(self, build_tree=True, EDGE_LENGTH_THRESHOLD=sys.float_info.max):
         """
         Generate data structures to quickly retrieve relevant information. A valid city_street_graph is required.
@@ -268,6 +232,136 @@ class CityHub:
             self.city_tree = BallTree(np.deg2rad(np.c_[np.array(self.refined_city_vert_list)]), metric='haversine')
         
         return True
+
+
+     def query_point_in_city_mesh(self, lat, long, return_nearest_index=False):
+        """
+        Query a point in lat-long format (in degrees), in the city street graph.
+        refined_vert_list is used in the tree, but the original vertices will be returned.
+    
+        Parameters
+        ----------
+        lat: float
+            latitude of the query point
+        long: float
+            longitude of the query point
+        return_nearest_index: bool
+            whether to return the nearest point index (according to vert_list indexing) or a lat-long tuple
+            
+        Returns
+        -------
+            int (index) or tuple (lat,long) representing the nearest point in the tree.
+        """        
+        
+        try:
+            self.city_tree
+        except:
+            print('BallTree does not exist. building...')
+            self.build_tree()
+            
+        [dist,v] =self.city_tree.query(convert_deg_query(lat,long))
+        
+        v_cand1 = self.refined_city_vert_correspondence_dict[v[0][0]][0]
+        v_cand2 = self.refined_city_vert_correspondence_dict[v[0][0]][1]
+        
+        v_cand1_coords = self.city_vert_list[v_cand1]
+        v_cand2_coords = self.city_vert_list[v_cand2]
+        
+        great_circle_dist1 = ox.distance.great_circle_vec(lat,long,v_cand1_coords[0],v_cand1_coords[1])
+        great_circle_dist2 = ox.distance.great_circle_vec(lat,long,v_cand2_coords[0],v_cand2_coords[1])                                                              
+        if great_circle_dist1<great_circle_dist2:
+             v = v_cand1                                                                
+        else:
+             v = v_cand2
+                                                                              
+        if return_nearest_index:
+            return v
+        else:
+            return self.city_vert_list[v]
+        
+     def query_point_in_graph_radius_in_city_mesh(self, lat, long, query_radius):
+        """
+        Query a point in lat-long format (in degrees), in the city street graph. 
+        First, the nearest graph vertex is found. Than, vertices which are less than 'radius' distance, using a distance through the graph's edges, are returned.
+        
+    
+        Parameters
+        ----------
+        lat: float
+            latitude of the query point
+        long: float
+            longitude of the query point
+        query_radius: float
+            Include all neighbors of distance<=radius from n, using the graph's distance in km
+            
+        Returns
+        -------
+            a list of points within maximum graph's distance to the query point
+        """        
+        
+        try:
+            self.city_tree
+        except:
+            print('BallTree does not exist. building...')
+            self.build_tree()
+            
+        [dist,v] =self.city_tree.query(convert_deg_query(lat,long))
+        
+        v_cand1 = self.refined_city_vert_correspondence_dict[v[0][0]][0]
+        v_cand2 = self.refined_city_vert_correspondence_dict[v[0][0]][1]
+        
+        v_cand1_coords = self.city_vert_list[v_cand1]
+        v_cand2_coords = self.city_vert_list[v_cand2]
+        
+        great_circle_dist1 = ox.distance.great_circle_vec(lat,long,v_cand1_coords[0],v_cand1_coords[1])
+        great_circle_dist2 = ox.distance.great_circle_vec(lat,long,v_cand2_coords[0],v_cand2_coords[1])                                                              
+        if great_circle_dist1<great_circle_dist2:
+             v = v_cand1                                                                
+        else:
+             v = v_cand2
+        ps=nx.single_source_dijkstra_path(self.city_street_graph,self.city_vert_ind_to_nxind_dict[v],cutoff=query_radius*1000.0,weight='length')
+        
+    
+        result_nodes = []
+        for k in ps.keys():
+            result_nodes.append(self.city_vert_nxind_to_ind_dict[k])    
+        return result_nodes  
+
+    
+     def load_PALayer_mesh(self, filename, key_column = 'Name', EDGE_LENGTH_THRESHOLD=sys.float_info.max):
+        """
+        Load a Polygon-Aggregated Layer mesh from a file for polygon-aggregated data purposes, 
+        such as census sectors data. KML and SHP formats are accepted.
+    
+        Parameters
+        ----------
+        filename : string
+            city mesh filename, including the file extension, which will be used to identify the file format.
+        key_column : string
+            name of the key column of each polygon (or row of the dataframe)
+        EDGE_LENGTH_THRESHOLD: float
+            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.            
+        Returns
+        -------
+            returns the layer index or -1 if it fails.
+        """
+        
+        extension_str = filename[-3:]
+        if(extension_str.lower()=='kml'):
+            gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+            try:
+                self.PALayers_mesh.append(gpd.read_file(filename, driver='KML'))
+            except:
+                return -1
+        elif(extension_str.lower()=='shp'):
+            try:
+                self.PALayers_mesh.append(aggregated_polygon_mesh=gpd.read_file(filename, driver='SHP'))
+            except:
+                return -1
+        self.PALayers_mesh_keycolumn[len(self.PALayers_mesh)-1]=key_column
+        self.preprocess_PALayer_mesh(len(self.PALayers_mesh)-1,True,True,EDGE_LENGTH_THRESHOLD)
+        return len(self.PALayers_mesh)-1
+        
 
      def preprocess_PALayer_mesh(self, layer, build_tree=True, swap_coordinates=True, EDGE_LENGTH_THRESHOLD=sys.float_info.max):
         """
@@ -432,6 +526,120 @@ class CityHub:
             return False
             
         return True    
+
+
+     def query_point_in_PALayer_mesh(self, layer, lat, long, return_nearest_index=False):
+        """
+        Query a point in lat-long format, in degrees, in a PALayer mesh.
+    
+        Parameters
+        ----------
+        layer (float): layer position according to self.PALayers_mesh.
+        lat: float
+            latitude of the query point
+        long: float
+            longitude of the query point
+        return_nearest_index: bool
+            whether to return the nearest point index (according to vert_list indexing) or a lat-long tuple
+            
+        Returns
+        -------
+            int (index) or tuple (lat,long) representing the nearest point in the tree.
+        """        
+        
+        try:
+            self.PALayers_aggregated_polygon_tree[layer]
+        except:
+            print('BallTree does not exist. building...')
+            self.PALayers_aggregated_polygon_tree[layer] = BallTree(np.deg2rad(np.array(self.PALayers_refined_aggregated_polygon_vert_list[layer])), metric='haversine')
+            
+        [dist,v] =self.PALayers_aggregated_polygon_tree[layer].query(convert_deg_query(lat,long))
+        
+        v_org = self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer][v[0][0]]
+        self.nearest_vertex_index=v_org
+        if return_nearest_index:
+            return v_org
+        else:
+            return self.PALayers_aggregated_polygon_vert_list[layer][v_org]
+
+
+     def polygons_from_PALayer_vertex(self, layer, vert_ind):
+        """
+        Compute the polygons in the star of the aggregated polygon vertex 'vert_ind'.
+    
+        Parameters
+        ----------
+        layer (int): layer position according to self.PALayers_mesh
+        vert_ind (int): vertex index (according to city_vert_list indexing)
+        Returns
+        -------
+            a list of polygon keys, according to self.PALayers_mesh_keycolumn[layer], or an empty list in case of an issue
+        """        
+        try:
+            self.PALayers_aggregated_polygon_vertices_indices_dict[layer]
+        except:
+            return []
+            
+        nearest_subnormal_list = [a for a, b in self.PALayers_aggregated_polygon_vertices_indices_dict[layer].items() if vert_ind in b]      
+
+        return nearest_subnormal_list 
+    
+    
+     def polygon_features_from_PALayer_vertex(self, layer, vert_ind, feature):
+        """
+        Retrieve a list of features from the the polygons in the star of the aggregated polygon vertex 'vert_ind'.
+    
+        Parameters
+        ----------
+        layer (int): layer position according to self.PALayers_mesh.
+        vert_ind (int): vertex index (according to city_vert_list indexing)
+        feature (string): feature name to be retrieved from each neighbour polygon.
+        Returns
+        -------
+            a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
+        """
+        
+        if not feature in self.PALayers_csv_data[layer].columns:
+            print('invalid feature name '+feature)
+            return []
+        
+        polygon_list=self.polygons_from_PALayer_vertex(layer,vert_ind)      
+        
+        feature_list = []
+        for polygon in polygon_list:
+            dfsearch = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)]
+            if dfsearch.shape[0]>0:
+                feature_list.append(dfsearch[feature].to_numpy()[0])
+        return feature_list
+    
+     def polygon_features_from_coords(self, layer, lat, long, feature):
+        """
+        Retrieve a list of features from the the polygons in the star of the nearest vertex to a query point with coordinates (lat,long), among the aggregated polygon vertices.
+    
+        Parameters
+        ----------
+        layer (int): layer position according to self.PALayers_mesh.
+        lat (float): latitude of the query point.
+        long (float): longitude of the query point.
+        feature (string): feature name to be retrieved from each neighbour polygon.
+        Returns
+        -------
+            a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
+        """        
+        
+        if not feature in self.PALayers_csv_data[layer].columns:
+            print('invalid feature name '+feature)
+            return []
+        
+        vert_ind=self.query_point_in_PALayer_mesh(layer,lat, long, True)
+        polygon_list=self.polygons_from_PALayer_vertex(layer,vert_ind)      
+        
+        feature_list = []
+        for polygon in polygon_list:
+            feature_val = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)][feature].to_numpy()[0]
+            feature_list.append(feature_val)
+        return feature_list
+
     
      def load_RDLayer(self, filename, preprocess=True, swap_coordinates=True):
         """
@@ -467,274 +675,8 @@ class CityHub:
         if preprocess:
             self.preprocess_RDLayer(len(self.RDLayers)-1, True, swap_coordinates)
         return len(self.RDLayers)-1
-    
-     def load_PBLayer(self, filename, zone_number=23, zone_letter='K', build_tree=True, error_x=0.0, error_y=0.0):
-        """
-        Load a SHP or KML file made up of places that are georreferenced as single points (positions) in UTM format. Points are converted to lat-long format and stored in self.PBLayers[layer]['latlong'] as tuples.
-    
-        Parameters
-        ----------
-        filename : string
-            SHP filename. 
-        zone_number: int
-            Zone number. For SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Paulo, use 23.
-        zone_letter: string
-            Zone letter. For SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Paulo, use "K".
-        build_tree: bool
-            Whether to build a BallTree of the layer points.
-        error_x: float
-            Translate the first UTM coordinates if the source is wrong.
-        error_y: float
-            Translate the second UTM coordinates if the source is wrong.
-        
-        Returns
-        -------
-            returns the layer index or -1 if it fails.
-        """
-        extension_str = filename[-3:]
-        if(extension_str.lower()=='kml'):
-            gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
-            try:
-                pointdf = gpd.read_file(filename, driver='KML')
-                pointdf['latlong'] = [(p.y,p.x) for p in pointdf.geometry]
-            except:
-                return -1
-        elif(extension_str.lower()=='shp'):
-            try:
-                pointdf = gpd.read_file(filename, driver='SHP')
-                pointdf['latlong'] = [utm_to_latlon(tuple(map(operator.add, geom.coords[0], tuple((error_x,error_y)))), zone_number, zone_letter) for geom in pointdf.geometry]
-            except:
-                return -1
-        
-        self.PBLayers.append(pointdf)
-        layer=len(self.PBLayers)-1
-        if build_tree:
-             self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
-        return layer
 
 
-     def load_PBLayer_csv_data(self, layer, filename, lat_key_column, lng_key_column, build_tree=True):
-        """
-        Load a CSV file made up of coordinates data and appends it to a PBLayer.
-    
-        Parameters
-        ----------
-        layer (int): layer position according to self.PBLayers.
-        filename (string): CSV filename. 
-        lat_key_column (string): Name of the key column of the CSV file that matches the latitude.
-        lng_key_column (string): Name of the key column of the CSV file that matches the longitude.
-        
-        Returns
-        -------
-            returns True if the CSV file is succesfully loaded.
-        """
-        try:
-            pointdf = pd.read_csv(filename)
-            self.csv_lat_key_column = lat_key_column
-            self.csv_lng_key_column = lng_key_column
-        except NameError as e:
-             print(e)  
-             return False
-        
-        if lat_key_column in pointdf.columns:
-            self.PBLayers_csv_lat_key_column[layer] = lat_key_column
-        else:
-            print('invalid lat_key_column.')
-            return False
-
-        if lng_key_column in pointdf.columns:
-            self.PBLayers_csv_lng_key_column[layer] = lng_key_column
-        else:
-            print('invalid lng_key_column.')
-            return False
-
-        pointdf = pointdf[pointdf[lat_key_column].notna()]
-        
-        if(isinstance(pointdf.iloc[0][lat_key_column], str)):
-            pointdf['latlong'] = [(float(pointdf.iloc[p][lat_key_column].replace(',','.')),float(pointdf.iloc[p][lng_key_column].replace(',','.'))) for p in range(pointdf.shape[0])]
-        else:
-            pointdf['latlong'] = [(pointdf.iloc[p][lat_key_column],pointdf.iloc[p][lng_key_column]) for p in range(pointdf.shape[0])]
-
-
-        self.PBLayers.append(pointdf)
-        layer=len(self.PBLayers)-1
-        if build_tree:
-             self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
-        return True
-     
-     def project_PBLayer_to_corners(self, layer):
-        """
-        Projects PBLayer points to the nearest city street graph corner. The layer must be loaded first. 
-    
-        Parameters
-        ----------
-        layer (int): layer position according to self.PBLayers
-        build_tree (bool): builds a BallTree for querying
-        
-        Returns
-        -------
-            returns True if the preprocessing succeeds.
-        """
-
-        if len(self.PBLayers)<=layer:
-            return False
-        
-
-        vertices_points = [[]] * len(self.city_vert_dict.values())
-        for point in self.PBLayers[layer].index:
-            vrt = self.query_point_in_city_mesh(self.PBLayers[layer].loc[point]['latlong'][X],self.PBLayers[layer].loc[point]['latlong'][Y], True)
-            vertices_points[vrt] = vertices_points[vrt] + [point]
-            
-        self.PBLayers_corner_projection_dicts[layer] = vertices_points     
-
-        return True
-
-
-     def load_crimes_layer(self, filename, lat_key_column, lng_key_column):
-        """
-        Load a CSV file made up of coordinates data of crimes.
-    
-        Parameters
-        ----------
-        filename : string
-            CSV filename. 
-        lat_key_column: string
-            Name of the key column of the CSV file that matches the latitude
-        
-        Returns
-        -------
-            returns True if the CSV file is succesfully loaded.
-        """
-        try:
-            pointdf = pd.read_csv(filename, index_col = 0)
-        except NameError as e:
-             print(e)  
-             return False
-        
-        if not lat_key_column in pointdf.columns:
-            print('invalid lat_key_column.')
-            return False
-
-        if not lng_key_column in pointdf.columns:
-            print('invalid lng_key_column.')
-            return False
-
-        pointdf = pointdf[pointdf[lat_key_column].notna()]
-        
-        if(isinstance(pointdf.iloc[0][lat_key_column], str)):
-            pointdf['latlong'] = [(float(pointdf.iloc[p][lat_key_column].replace(',','.')),float(pointdf.iloc[p][lng_key_column].replace(',','.'))) for p in range(pointdf.shape[0])]
-        else:
-            pointdf['latlong'] = [(pointdf.iloc[p][lat_key_column],pointdf.iloc[p][lng_key_column]) for p in range(pointdf.shape[0])]
-
-        pointdf["vert"] = pointdf.apply(lambda row: self.query_point_in_city_mesh(row['latlong'][0],row['latlong'][1], True), axis = 1)
-
-        pointdf = pointdf.drop_duplicates()
-
-        self.layer_crimes = pointdf
-
-        #if build_tree:
-        #     self.layer_crimes_tree = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
-        return True  
-     
-     def compute_layer_crimes(self, initial_date = None, final_date = None):
-        """
-        Computes crimes per day period for each vertice
-
-        Parameters
-        ----------
-        build_tree : bool
-            builds a BallTree for querying
-        swap_coordinates: bool
-            useful when latitude and longitude coordinates are given in the wrong order.
-
-        Returns
-        -------
-            returns True if the preprocessing succeeds.
-        """
-
-        tmp_layer_crimes = self.layer_crimes.copy()
-        if((not initial_date is None) or (not final_date is None)):
-            tmp_layer_crimes["DATAOCORRENCIA"] = pd.to_datetime(tmp_layer_crimes["DATAOCORRENCIA"], format = "%d/%m/%Y", errors = 'coerce')
-            tmp_layer_crimes = tmp_layer_crimes[tmp_layer_crimes['DATAOCORRENCIA'].notna()]
-            if(not initial_date is None):
-                tmp_layer_crimes = tmp_layer_crimes[tmp_layer_crimes["DATAOCORRENCIA"] >= initial_date]
-            if(not final_date is None):
-                tmp_layer_crimes = tmp_layer_crimes[tmp_layer_crimes["DATAOCORRENCIA"] <= final_date]
-
-        aux = pd.DataFrame(tmp_layer_crimes[["vert","OBJETO"]].value_counts().keys().tolist(), columns = ["vert","OBJETO"])
-
-        aux["n"] = tmp_layer_crimes[["vert","OBJETO"]].value_counts().values
-        aux = aux.pivot(index='vert', columns='OBJETO')
-        aux.columns = [ x[1] for x in aux.columns ]
-
-        aux["TODOS"] = aux.sum(axis=1)
-
-        crimes_columns = list(tmp_layer_crimes['OBJETO'].unique())
-        crimes_count = [[0]*(len(crimes_columns)+1) for _ in range(len(self.city_vert_dict.values()))]
-
-        crimes_count = pd.DataFrame(crimes_count,columns = aux.columns) + aux
-        crimes_count = crimes_count.fillna(0)
-        
-           
-        crimes_count.columns = ['CRIME_' + name.replace(' ','_') for name in list(crimes_count.columns)]
-
-        #self.layer_crimes_vertices = vertices_points
-        self.layer_crimes_count = crimes_count
-        self.layer_crimes_count.rename(columns={"CRIME_CELULAR": "crime_mobile", "CRIME_VEÍCULOS": "crime_vehicle", "CRIME_TODOS": "crime_all"},inplace=True)
-
-        return True
-
-     def load_layer_trips(self, filename):
-        """
-        Load occurences trip data in CSV format
-    
-        Parameters
-        ----------
-        filename : string
-            CSV filename. 
-        
-        Returns
-        -------
-            returns True if the CSV file is succesfully loaded.
-        """
-        print("hola")
-        try:
-            self.tripdf = pd.read_csv(filename, encoding='latin-1')
-        except NameError as e:
-            print(e)
-            return False
-        
-        self.tripdf = self.tripdf.loc[self.tripdf['fora_capital_start'] == 0]
-        self.tripdf = self.tripdf.loc[self.tripdf['fora_capital_dest'] == 0]
-        
-        return True
-    
-     def compute_trips_density(self, radius, DENSE_THRESHOLD = 10):
-        self.trip_vert_occurrences_starting = [0] * len(self.city_vert_list)
-        self.trip_vert_occurrences_dest = [0] * len(self.city_vert_list)
-        start_dict=self.tripdf['closest_node_starting'].to_dict()
-        end_dict=self.tripdf['closest_node_dest'].to_dict()
-        for value in start_dict.values():
-            self.trip_vert_occurrences_starting[value] += 1
-        for value in end_dict.values():
-            self.trip_vert_occurrences_dest[value] += 1       
-            
-        self.trip_vert_occurrences_starting_density = [0] * len(self.city_vert_list)
-        self.trip_vert_occurrences_dest_density = [0] * len(self.city_vert_list)
-        
-        self.city_tree_coarse = BallTree(np.deg2rad(np.c_[np.array(self.city_vert_list)]), metric='haversine')
-        
-        
-        for i in range(len(self.city_vert_list)):
-            coords = self.city_vert_list[i]
-            near_point_list=self.city_tree_coarse.query_radius(convert_deg_query(coords[0],coords[1]),radius/EARTH_RADIUS)[0]
-            for vert_ind in near_point_list:
-                self.trip_vert_occurrences_starting_density[i]+=self.trip_vert_occurrences_starting[vert_ind]
-                self.trip_vert_occurrences_dest_density[i]+=self.trip_vert_occurrences_dest[vert_ind]    
-        
-        self.dense_label = [(self.trip_vert_occurrences_starting_density[i]>DENSE_THRESHOLD)*1 for i in range(len(self.trip_vert_occurrences_starting_density))]
-
-    
      def preprocess_RDLayer(self, layer, build_tree=True, swap_coordinates=True):
         """
         Generate data structures to quickly retrieve relevant information from RDLayer meshes. The layer must be loaded first.
@@ -824,136 +766,8 @@ class CityHub:
         if build_tree:
              self.RDLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(self.RDLayers_vert_list[layer])]), metric='haversine')
         return True
-    
-    
-     def query_point_in_city_mesh(self, lat, long, return_nearest_index=False):
-        """
-        Query a point in lat-long format (in degrees), in the city street graph.
-        refined_vert_list is used in the tree, but the original vertices will be returned.
-    
-        Parameters
-        ----------
-        lat: float
-            latitude of the query point
-        long: float
-            longitude of the query point
-        return_nearest_index: bool
-            whether to return the nearest point index (according to vert_list indexing) or a lat-long tuple
-            
-        Returns
-        -------
-            int (index) or tuple (lat,long) representing the nearest point in the tree.
-        """        
-        
-        try:
-            self.city_tree
-        except:
-            print('BallTree does not exist. building...')
-            self.build_tree()
-            
-        [dist,v] =self.city_tree.query(convert_deg_query(lat,long))
-        
-        v_cand1 = self.refined_city_vert_correspondence_dict[v[0][0]][0]
-        v_cand2 = self.refined_city_vert_correspondence_dict[v[0][0]][1]
-        
-        v_cand1_coords = self.city_vert_list[v_cand1]
-        v_cand2_coords = self.city_vert_list[v_cand2]
-        
-        great_circle_dist1 = ox.distance.great_circle_vec(lat,long,v_cand1_coords[0],v_cand1_coords[1])
-        great_circle_dist2 = ox.distance.great_circle_vec(lat,long,v_cand2_coords[0],v_cand2_coords[1])                                                              
-        if great_circle_dist1<great_circle_dist2:
-             v = v_cand1                                                                
-        else:
-             v = v_cand2
-                                                                              
-        if return_nearest_index:
-            return v
-        else:
-            return self.city_vert_list[v]
-        
-     def query_point_in_graph_radius_in_city_mesh(self, lat, long, query_radius):
-        """
-        Query a point in lat-long format (in degrees), in the city street graph. 
-        First, the nearest graph vertex is found. Than, vertices which are less than 'radius' distance, using a distance through the graph's edges, are returned.
-        
-    
-        Parameters
-        ----------
-        lat: float
-            latitude of the query point
-        long: float
-            longitude of the query point
-        query_radius: float
-            Include all neighbors of distance<=radius from n, using the graph's distance in km
-            
-        Returns
-        -------
-            a list of points within maximum graph's distance to the query point
-        """        
-        
-        try:
-            self.city_tree
-        except:
-            print('BallTree does not exist. building...')
-            self.build_tree()
-            
-        [dist,v] =self.city_tree.query(convert_deg_query(lat,long))
-        
-        v_cand1 = self.refined_city_vert_correspondence_dict[v[0][0]][0]
-        v_cand2 = self.refined_city_vert_correspondence_dict[v[0][0]][1]
-        
-        v_cand1_coords = self.city_vert_list[v_cand1]
-        v_cand2_coords = self.city_vert_list[v_cand2]
-        
-        great_circle_dist1 = ox.distance.great_circle_vec(lat,long,v_cand1_coords[0],v_cand1_coords[1])
-        great_circle_dist2 = ox.distance.great_circle_vec(lat,long,v_cand2_coords[0],v_cand2_coords[1])                                                              
-        if great_circle_dist1<great_circle_dist2:
-             v = v_cand1                                                                
-        else:
-             v = v_cand2
-        ps=nx.single_source_dijkstra_path(self.city_street_graph,self.city_vert_ind_to_nxind_dict[v],cutoff=query_radius*1000.0,weight='length')
-        
-    
-        result_nodes = []
-        for k in ps.keys():
-            result_nodes.append(self.city_vert_nxind_to_ind_dict[k])    
-        return result_nodes  
-  
-        
-     def query_point_in_PALayer_mesh(self, layer, lat, long, return_nearest_index=False):
-        """
-        Query a point in lat-long format, in degrees, in a PALayer mesh.
-    
-        Parameters
-        ----------
-        layer (float): layer position according to self.PALayers_mesh.
-        lat: float
-            latitude of the query point
-        long: float
-            longitude of the query point
-        return_nearest_index: bool
-            whether to return the nearest point index (according to vert_list indexing) or a lat-long tuple
-            
-        Returns
-        -------
-            int (index) or tuple (lat,long) representing the nearest point in the tree.
-        """        
-        
-        try:
-            self.PALayers_aggregated_polygon_tree[layer]
-        except:
-            print('BallTree does not exist. building...')
-            self.PALayers_aggregated_polygon_tree[layer] = BallTree(np.deg2rad(np.array(self.PALayers_refined_aggregated_polygon_vert_list[layer])), metric='haversine')
-            
-        [dist,v] =self.PALayers_aggregated_polygon_tree[layer].query(convert_deg_query(lat,long))
-        
-        v_org = self.PALayers_refined_aggregated_polygon_vert_correspondence_dict[layer][v[0][0]]
-        self.nearest_vertex_index=v_org
-        if return_nearest_index:
-            return v_org
-        else:
-            return self.PALayers_aggregated_polygon_vert_list[layer][v_org]
-        
+
+
      def query_point_in_RDLayer(self, layer, lat, long, radius, unique=False):
         """
         Query all points in a RDLayer which are within a Euclidian distance 'radius' from a query point in 
@@ -988,12 +802,143 @@ class CityHub:
         unique_areas = set()
         
         for point in near_point_list:
-            area = self.layers_vertices_area_dict[layer][point]
+            area = self.RDLayers_vertices_area_dict[layer][point]
             if area not in unique_areas:
                 unique_areas.add(area)
                 unique_list.append(point)
         
         return unique_list
+
+    
+     def load_PBLayer(self, filename, zone_number=23, zone_letter='K', build_tree=True, error_x=0.0, error_y=0.0):
+        """
+        Load a SHP or KML file made up of places that are georreferenced as single points (positions) in UTM format. Points are converted to lat-long format and stored in self.PBLayers[layer]['latlong'] as tuples.
+    
+        Parameters
+        ----------
+        filename : string
+            SHP filename. 
+        zone_number: int
+            Zone number. For SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Paulo, use 23.
+        zone_letter: string
+            Zone letter. For SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Paulo, use "K".
+        build_tree: bool
+            Whether to build a BallTree of the layer points.
+        error_x: float
+            Translate the first UTM coordinates if the source is wrong.
+        error_y: float
+            Translate the second UTM coordinates if the source is wrong.
+        
+        Returns
+        -------
+            returns the layer index or -1 if it fails.
+        """
+        extension_str = filename[-3:]
+        if(extension_str.lower()=='kml'):
+            gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+            try:
+                pointdf = gpd.read_file(filename, driver='KML')
+                pointdf['latlong'] = [(p.y,p.x) for p in pointdf.geometry]
+            except:
+                return -1
+        elif(extension_str.lower()=='shp'):
+            try:
+                pointdf = gpd.read_file(filename, driver='SHP')
+                pointdf['latlong'] = [utm_to_latlon(tuple(map(operator.add, geom.coords[0], tuple((error_x,error_y)))), zone_number, zone_letter) for geom in pointdf.geometry]
+            except:
+                return -1
+        
+        self.PBLayers.append(pointdf)
+        layer=len(self.PBLayers)-1
+        if build_tree:
+             self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
+        return layer
+
+
+     def load_PBLayer_csv_data(self, filename, lat_key_column, lng_key_column, build_tree=True, project_to_corners=False):
+        """
+        Load a CSV file made up of coordinates data and appends it to a PBLayer.
+    
+        Parameters
+        ----------
+        filename (string): CSV filename. 
+        lat_key_column (string): Name of the key column of the CSV file that matches the latitude.
+        lng_key_column (string): Name of the key column of the CSV file that matches the longitude.
+        BUILD_TREE
+        PROJECT_TO_CORNERS
+        
+        Returns
+        -------
+            returns True if the CSV file is succesfully loaded.
+        """
+        try:
+            pointdf = pd.read_csv(filename)
+        except NameError as e:
+             print(e)  
+             return False
+        
+        if not lat_key_column in pointdf.columns:
+            print('invalid lat_key_column.')
+            return False
+
+        if not lng_key_column in pointdf.columns:
+            print('invalid lng_key_column.')
+            return False
+
+
+        pointdf = pointdf[pointdf[lat_key_column].notna()]
+        
+        if(isinstance(pointdf.iloc[0][lat_key_column], str)):
+            pointdf['latlong'] = [(float(pointdf.iloc[p][lat_key_column].replace(',','.')),float(pointdf.iloc[p][lng_key_column].replace(',','.'))) for p in range(pointdf.shape[0])]
+
+        else:
+            pointdf['latlong'] = [(pointdf.iloc[p][lat_key_column],pointdf.iloc[p][lng_key_column]) for p in range(pointdf.shape[0])]
+
+        #pointdf = gpd.GeoDataFrame(pointdf, geometry=gpd.points_from_xy(pointdf['latlong'].apply(lambda x: x[1]), pointdf['latlong'].apply(lambda x: x[0])))
+
+        self.PBLayers.append(pointdf)
+        layer=len(self.PBLayers)-1
+
+        self.PBLayers_csv_lat_key_column[layer] = lat_key_column
+        self.PBLayers_csv_lng_key_column[layer] = lng_key_column
+
+        if project_to_corners:
+            self.project_PBLayer_to_corners(layer)
+
+        if build_tree:
+             self.PBLayers_balltree[layer] = BallTree(np.deg2rad(np.c_[np.array(pointdf['latlong'].to_list())]), metric='haversine')
+        return layer
+     
+     def project_PBLayer_to_corners(self, layer):
+        """
+        Projects PBLayer points to the nearest city street graph corner. The layer must be loaded first. 
+    
+        Parameters
+        ----------
+        layer (int): layer position according to self.PBLayers
+        build_tree (bool): builds a BallTree for querying
+        
+        Returns
+        -------
+            returns True if the preprocessing succeeds.
+        """
+
+        if len(self.PBLayers)<=layer:
+            return False
+        
+        #pointdf["vert"] = pointdf.apply(lambda row: self.query_point_in_city_mesh(row['latlong'][0],row['latlong'][1], True), axis = 1)
+
+        vertices_points = [[]] * len(self.city_vert_dict.values())
+        vert_column = []
+        for point in self.PBLayers[layer].index:
+            vrt = self.query_point_in_city_mesh(self.PBLayers[layer].loc[point]['latlong'][0],self.PBLayers[layer].loc[point]['latlong'][1], True)
+            vertices_points[vrt] = vertices_points[vrt] + [point]
+            vert_column.append(vrt)
+        
+        self.PBLayers_corner_projection_dicts[layer] = vertices_points     
+        self.PBLayers[layer]["vert"] = vert_column
+
+        return True
     
     
      def query_point_in_PBLayer(self, layer, lat, long, radius, return_nearest_indices=False):
@@ -1027,192 +972,7 @@ class CityHub:
         else:
             return self.PBLayers[layer]['latlong'][nearest_inds_list].tolist()        
         
-        
-     def polygons_from_PALayer_vertex(self, layer, vert_ind):
-        """
-        Compute the polygons in the star of the aggregated polygon vertex 'vert_ind'.
-    
-        Parameters
-        ----------
-        layer (int): layer position according to self.PALayers_mesh
-        vert_ind (int): vertex index (according to city_vert_list indexing)
-        Returns
-        -------
-            a list of polygon keys, according to self.PALayers_mesh_keycolumn[layer], or an empty list in case of an issue
-        """        
-        try:
-            self.PALayers_aggregated_polygon_vertices_indices_dict[layer]
-        except:
-            return []
-            
-        nearest_subnormal_list = [a for a, b in self.PALayers_aggregated_polygon_vertices_indices_dict[layer].items() if vert_ind in b]      
 
-        return nearest_subnormal_list 
-    
-    
-     def polygon_features_from_PALayer_vertex(self, layer, vert_ind, feature):
-        """
-        Retrieve a list of features from the the polygons in the star of the aggregated polygon vertex 'vert_ind'.
-    
-        Parameters
-        ----------
-        layer (int): layer position according to self.PALayers_mesh.
-        vert_ind (int): vertex index (according to city_vert_list indexing)
-        feature (string): feature name to be retrieved from each neighbour polygon.
-        Returns
-        -------
-            a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
-        """
-        
-        if not feature in self.PALayers_csv_data[layer].columns:
-            print('invalid feature name '+feature)
-            return []
-        
-        polygon_list=self.polygons_from_PALayer_vertex(layer,vert_ind)      
-        
-        feature_list = []
-        for polygon in polygon_list:
-            dfsearch = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)]
-            if dfsearch.shape[0]>0:
-                feature_list.append(dfsearch[feature].to_numpy()[0])
-        return feature_list
-    
-     def polygon_features_from_coords(self, layer, lat, long, feature):
-        """
-        Retrieve a list of features from the the polygons in the star of the nearest vertex to a query point with coordinates (lat,long), among the aggregated polygon vertices.
-    
-        Parameters
-        ----------
-        layer (int): layer position according to self.PALayers_mesh.
-        lat (float): latitude of the query point.
-        long (float): longitude of the query point.
-        feature (string): feature name to be retrieved from each neighbour polygon.
-        Returns
-        -------
-            a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
-        """        
-        
-        if not feature in self.PALayers_csv_data[layer].columns:
-            print('invalid feature name '+feature)
-            return []
-        
-        vert_ind=self.query_point_in_PALayer_mesh(layer,lat, long, True)
-        polygon_list=self.polygons_from_PALayer_vertex(layer,vert_ind)      
-        
-        feature_list = []
-        for polygon in polygon_list:
-            feature_val = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)][feature].to_numpy()[0]
-            feature_list.append(feature_val)
-        return feature_list
-
-
-     def visualization(self, layer, lat, long, feature, polygon_features):
-       """
-           Visualization of census sectors close to the closest vertex of a given coordinate.    
-        
-       Parameters
-       ----------
-       lat: float
-           latitude of the query point
-       long: float
-           longitude of the query point
-       feature: string
-           feature name to be retrieved from each neighbour polygon.
-       polygon_features: list
-        list of generated values from polygon_features_from_coords
-       Returns
-       -------
-           returns a visualization and saves it in HTML
-       """        
-       print('Generating visualization...')
-       
-       zip_iterator = zip(self.nearest_subnormal_list,polygon_features)
-       sector_feature_dic = dict(zip_iterator)
-
-       m = folium.Map(location=[lat,long], zoom_start=15, tiles='CartoDB positron')
-       j=0
-       #Real colormap
-       colorscale = branca.colormap.linear.YlOrRd_09.scale(self.datadf[feature].min(),self.datadf[feature].max())
-       #Colormap considering only the values ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹of the sectors involved
-       #colorscale = branca.colormap.linear.YlOrRd_09.scale(sector_feature_dic[min(sector_feature_dic, key=sector_feature_dic.get)],sector_feature_dic[max(sector_feature_dic, key=sector_feature_dic.get)])
-
-       def getcolor(feature):
-         return colorscale(sector_feature_dic[self.aggregated_polygon_mesh.Name.loc[ int(feature['id']) ]])
-       for i in self.nearest_subnormal_list:
-         folium.GeoJson(self.aggregated_polygon_mesh[self.aggregated_polygon_mesh.Name == i].geometry, style_function= lambda feature: {
-                 'fillColor': getcolor(feature),
-                 'weight': 0.7,
-                 'fillOpacity': 0.75,
-         }).add_child(folium.Popup(i+' : '+str(polygon_features[j]))).add_to(m)
-         polyverts = self.PALayers_polygon_vertices_dict[layer][i]
-         j=j+1
-         for vert in polyverts:
-             folium.CircleMarker([vert[0],vert[1]], radius=3, color='orange').add_to(m)
-
-       folium.CircleMarker([lat,long], radius=7, color='red').add_to(m)                                         #Query point
-       folium.CircleMarker(self.PALayers_aggregated_polygon_vert_list[layer][self.nearest_vertex_index], radius=7, color='blue').add_to(m)         #Nearest corner to point
-
-       folium.LayerControl().add_to(m)
-       folium.LatLngPopup().add_to(m)
-       m
-       m.save("map.html")
-       return m
-
-     def compute_feature_vector(self, vert_ind):
-        
-#        feature_vec = pd.Series([vert_ind], index = ['vert_ind'])
-        feature_vec = pd.Series([])
-#        layer_crimes = 0
-        layer_pontodeonibus = 0
-        layer_estacaodemetro = 1
-        layer_estacaodetrem = 2
-        layer_terminaldeonibus = 3
-        
-        query_coords=self.city_vert_list[vert_ind]
-
-
-#       crimes
-        feature_vec = feature_vec.append(self.layer_crimes_count.loc[vert_ind])
-
-#       ibge
-        ibge_list = pd.Series([0.0]*7)
-        ibge_list.index = ['Renda_media_por_domicilio', 'Renda_media_responsaveis', 'Responsaveis_sem_renda_taxa', 'Alfabetizados_de_7_a_15_anos', 'menores_de_18_anos_taxa', '18_a_65_anos_taxa', 'maiores_de_65_anos_taxa']
-        
-        for i in range(len(ibge_list.index)):
-            feats = self.polygon_features_from_vertex(vert_ind,  ibge_list.index[i])
-            if len(feats)==0:
-                return pd.Series([])
-            for f in feats:
-                if math.isnan(f):
-                    return pd.Series([])
-            ibge_list[i]=mean(feats)
-        feature_vec = feature_vec.append(ibge_list)    
-        
-#       transporte
-        transporte_indices = ['Pontos_de_onibus','Estacao_de_metro', 'Estacao_de_trem', 'Terminal_de_onibus']
-        transporte_list = pd.Series([0.0]*len(transporte_indices), index = transporte_indices)
-        transporte_list['Pontos_de_onibus'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_pontodeonibus,0.2))
-        transporte_list['Estacao_de_metro'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_estacaodemetro,0.2))
-        transporte_list['Estacao_de_trem'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_estacaodetrem,0.2))
-        transporte_list['Terminal_de_onibus'] = len(self.query_point_in_PBLayer(query_coords[0],query_coords[1],layer_terminaldeonibus,0.2))
-        
-        feature_vec = feature_vec.append(transporte_list)  
-        
-#       favelas
-        favela_indices = ['Favela_proxima']
-        favela_list = pd.Series([0.0]*len(favela_indices), index = favela_indices)
-        favela_list['Favela_proxima'] = (len(self.query_point_in_mesh_layer(query_coords[0],query_coords[1],0,0.5,True))>0)*1
-        
-        feature_vec = feature_vec.append(favela_list)    
-
-#       weather        
-        feature_vec = feature_vec.append(self.SMLayers_estimated_measurements.loc[vert_ind,:])
-        
-        return feature_vec
-
-     def compute_all_feature_vectors(self):
-        self.feature_vecs = [self.compute_feature_vector(vert_ind) for vert_ind in range(len(self.city_vert_list))]
-     
      def load_SMLayers_known_measurements(self, measu_point_name, measu_filename):
         """
         Load a dataframe from csv file corresponding to time series of
@@ -1554,7 +1314,8 @@ class CityHub:
         measu_estimation = measu_estimation.set_index(query_points.index.name)
         
         return measu_estimation
-    
+ 
+
      def compute_layer_sparse(self, initial_date, final_date, kernel_function='auto'):
        """
        Aggregate measurements from all sparse variable from initial_date to
@@ -1617,11 +1378,49 @@ class CityHub:
        self.SMLayers_estimated_measurements = measu_estimation
        return True
 
+     def compute_feature_vector(self, vert_ind):
+        """
+        Create your own method to compute a feature vector given a vertex index.
+        
+        Parameters
+        ----------
+        vert_ind (int): vertex index from city mesh
+        Returns
+        -------
+            A list with a feature vector from vert_ind 
+        """     
+
+        return []
+
+     def compute_all_feature_vectors(self):
+        """
+        Compute the feature vectors of all vertices of the city street graph, and assign them to self.feature_vecs
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+            
+        """
+        self.feature_vecs = [self.compute_feature_vector(vert_ind) for vert_ind in range(len(self.city_vert_list))]
+
 
 def convert_deg_query(lat, long):
     return np.array([np.deg2rad(lat),np.deg2rad(long)]).reshape(1,-1)
 
 def load_preprocessed_CityHub(filename):
+    """
+        Load a preprocessed CityHub file
+        
+        Parameters
+        ----------
+        filename (string): pickle file
+        Returns
+        -------
+        Return a CityHub instance
+        """ 
+
     with open(filename, 'rb') as f:
         return pickle.load(f)
     
