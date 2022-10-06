@@ -864,8 +864,8 @@ class CityHub:
         filename (string): CSV filename. 
         lat_key_column (string): Name of the key column of the CSV file that matches the latitude.
         lng_key_column (string): Name of the key column of the CSV file that matches the longitude.
-        BUILD_TREE
-        PROJECT_TO_CORNERS
+        build_tree (bool): Whether to build a BallTree of the layer points.
+        project_to_corners (bool): Whether to project all points to the nearest corner.
         
         Returns
         -------
