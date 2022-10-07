@@ -11,7 +11,7 @@ Four types of data layers are currently available:
 
 The file CityHub.py contains the source code of the CityHub library, with the following functionalities:
 
-1. load a city mesh from a Gpickle (networkX graph in pickle format); or from a city string (i.e., 'Sao Paulo, Brazil')
+1. load a city street graph from a Gpickle (networkX graph in pickle format); or from a city string (i.e., 'Sao Paulo, Brazil')
 2. load a polygon mesh for polygon-agreggated data purposes from a KML or SHP file
 3. generate data structures to quickly retrieve relevant information
 4. build BallTrees for fast nearest neighbour search using the haversine metric
@@ -19,8 +19,8 @@ The file CityHub.py contains the source code of the CityHub library, with the fo
 9. load a CSV file made up of polygon-aggregated data (this functionality requires an associated polygon mesh)
 10. load a layer mesh describing poligonal areas with specific characteristics
 11. load a point-based layer describing points of interest
-12. save a preprocessed CityGraph as a pickle file
-13. load a preprocessed CityGraph as a pickle file
+12. save a preprocessed CityHub as a pickle file
+13. load a preprocessed CityHub as a pickle file
 14. query points in the city mesh, in the polygon mesh, in layer meshes, and in point-based layers. Query may be performed by radius.
 15. retrieve polygons in the star of a polygon mesh vertex
 16. retrieve features of polygons in the star of a vertex
