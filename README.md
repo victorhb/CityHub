@@ -1,12 +1,15 @@
-# CityHub class
-The CityHub class is aimed to provide data structures and algorithms to work with different types of data on a city streets' mesh. In addition to the city mesh, three kinds of data are currently available:
+# CityHub library
+CityHub is a library to handle multiple urban datasets. It can integrate distinct urban data types in a layer-based architecture that considers four different types of layers. The integrated data is preprocessed to a common spatial domain: the set of nodes of a city street graph. The resulting data structures may be easily used to export feature vectors associated to the nodes of a street graph, enabling a multitude of analytical procedures. 
 
-1. Polygon-aggregated city mesh and data: useful for census data, where data is aggregated by census sectors, which are generally defined as polygons. 
-2. Poligonal areas layers: useful to describe areas with specific characteristics, such as subnormal agglomerates. Many layers may be loaded separately.
-3. Point-of-interest layers: may represent specific types of places that can be described as a single point location, such as bus stations, restaurants, bars, etc. Many layers may be loaded separately.
+Four types of data layers are currently available:
+
+1. Point-based data layers: to represent specific types of places that can be described as a single point location, such as bus stations, restaurants, bars, etc. 
+2. Regional domain data layers: may represent areas with specific characteristics, such as subnormal agglomerates.
+3. Polygon-aggregated data layers: useful for data that is aggregated in polygonal regions, such as census sectors.
+4. Sparse data layers: used to represent data that is sparse in space and requires interpolation, such as temperature and rainfall precipitation.
 
 
-The file CityHub.py contains the source code of the CityHub class, with the following functionalities:
+The file CityHub.py contains the source code of the CityHub library, with the following functionalities:
 
 1. load a city mesh from a Gpickle (networkX graph in pickle format); or from a city string (i.e., 'Sao Paulo, Brazil')
 2. load a polygon mesh for polygon-agreggated data purposes from a KML or SHP file
