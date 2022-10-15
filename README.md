@@ -24,42 +24,35 @@ The file CityHub.py contains the source code of the CityHub library, with the fo
 11. load a preprocessed CityHub as a pickle file
 
 
-The following code first loads São Paulo's street mesh ('data/sp_network.gpickle'), which is refined to assure maximum edge length of 40 meters. Then, a polygon mesh (malha-sp-2010.kml) is loaded and also refined to assure maximum edge length of 40 meters. The associated CSV polygon data file (sectorsindices.csv) is then loaded. Then, the preprocessed CityHub objectred is saved to the file 'data/saopaulo.bin' for faster loading times. 
+The following code first loads São Paulo's street mesh ('saopaulo_street_graph.gpickle'), which is refined to assure maximum edge length of 40 meters (for edge projection purposes). Then, a PA layer is loaded in two steps: a polygon mesh (saopaulo_malha_census_units-2010.kml) is loaded and also refined to assure maximum edge length of 40 meters; and the associated CSV polygon data file (saopaulo_census_sectors_data-2010.csv) is loaded. Two PB layers, representing bus stops and train stations, and a RD layer representing subnormal agglomerates are also loaded. Finally, a SM layer is loaded with information from 3 different measurement stations. The preprocessed CityHub object is saved to the file 'saopaulo.bin' for faster loading times. 
+
 ```
 import CityHub
-ch = CityHub.CityHub('data/sp_network.gpickle',40.0)
-ch.load_polygon_mesh('data/malha-sp-setores-2010.kml','Name',40.0)
-ch.load_polygon_csv_data('data/sectorsindices.csv','Cod_setor')
-ch.save_preprocessed_CityHub('data/saopaulo.bin')
-polygon_features = ch.polygon_features_from_coords(-23.5368789998025, -46.453812,  'Renda_media_por_domicilio')
-ch.visualization(-23.5368789998025, -46.453812,  'Renda_media_por_domicilio',polygon_features)
+ch = CityHub.CityHub('saopaulo_street_graph.gpickle',40.0)
+ch.load_PALayer_mesh('saopaulo_malha_census_units-2010.kml','Name',40.0)
+ch.load_PALayers_csv_data(0,'saopaulo_census_sectors_data-2010.csv','Cod_setor')
+ch.load_PBLayer('saopaulo_bus_stops.shp',23,'K',True,-45.0,-45.0)
+ch.load_PBLayer('saopaulo_train_stations.shp',23,'K',True,-45.0,-45.0)
+ch.load_RDLayer('saopaulo_subnormal_agglomerates.shp')
+ch.load_SMLayers_known_measurements('Barueri','Barueri.CSV')
+ch.load_SMLayers_known_measurements('Interlagos','Interlagos.CSV')
+ch.load_SMLayers_known_measurements('Mirante','Mirante.CSV')
+ch.load_SMLayers_temp_agg_funcs('Sparse_temp_agg_funcs.CSV')
+ch.load_SMLayers_measurements_points_info('Stations_info.CSV')
+ch.compute_layer_sparse('01-01-2020','31-12-2020')
+ch.save_preprocessed_CityHub('saopaulo.bin')
 ```
 
-In the following, a preprocessed CityHub is loaded, and a specific lat-long point is given as input to retrieve a list of specific features ('Renda_media_por_domicilio') from polygon aggregated data, in its neighborhood. Note that the given lat-long is first projected to the nearest vertex in the polygon mesh vertex, before retrieving the polygons' data. Note that such features could then be assigned to the city mesh vertex that is nearest to lat-long. Finally, the result is visualized in the map.
- 
+In the following, a preprocessed CityHub is loaded, and a specific lat-long point is given as input to retrieve a list of specific features ('Renda_media_por_domicilio') from polygon aggregated data, in its neighborhood. Note that the given lat-long is first projected to the nearest vertex in the polygon mesh vertex, before retrieving the polygons' data. Note that such features could then be assigned to the city mesh vertex that is nearest to lat-long. 
  ```
 import CityHub
 ch = CityHub.load_preprocessed_CityHub('data/saopaulo.bin')
 polygon_features = ch.polygon_features_from_coords(-23.5368789998025, -46.453812,  'Renda_media_por_domicilio')
-ch.visualization(-23.5368789998025, -46.453812,  'Renda_media_por_domicilio',polygon_features)
 ```
 
-Next, in the following code a layer mesh with several distinct polygonal areas (or agglomerates) is loaded, and a query for the layer mesh neighbor vertices of a given lat-long, within a given radius vertices, is performed. The last input parameter (True) specifies that a unique vertex per area is returned.
+Following the same code, a specific (lat,lon) pair is queried in the subnormal agglomerates layer, using a 1km search radius. The last input parameter (True) specifies that a unique vertex per area is returned (in case you only need to identify any vertex of nearby subnormal agglomerates).  Then, another (lat,lon) pair is queried in the second PB Layer (train stations), using a 500m search radius, and returning the indices of the nearby vertices (the last input parameter is True).
 
 ```
-ch.load_layer_mesh('AGSN_2019.shp')
-ch.query_point_in_mesh_layer(-23.5368789998025, -46.453812, 0, 1.0, True)
-```
-
-Finally, in the following example a preprocessed CityHub file is loaded; four point-based layers holding bus stops positions, subway stations, train stations, and bus terminals from São Paulo are loaded from the shapefiles 'SAD69-96_SHP_pontoonibus.shp', 'SAD69-96_SHP_estacaometro_point.shp', 'SAD69-96_SHP_estacaotrem_point.shp' and 'sad6996_terminal_onibus.shp'; and all bus stops that lie inside a circle of 1km radius centered at query_coords.
-Note: the last parameters -45.0, -45.0 are corrections on the input of the georreferenced data files.
-
-```
-ch = CityHub.load_preprocessed_CityHub('data/saopaulo.bin')
-ch.load_layer_points('SAD69-96_SHP_pontoonibus.shp',23,'K',True,-45.0,-45.0))
-ch.load_layer_points('SAD69-96_SHP_estacaometro_point.shp',23,'K',True,-45.0,-45.0))
-ch.load_layer_points('SAD69-96_SHP_estacaotrem_point.shp',23,'K',True,-45.0,-45.0))
-ch.load_layer_points('sad6996_terminal_onibus.shp',23,'K',True,-45.0,-45.0))
-query_coords = (-23.5988, -46.63542)
-ch.query_point_in_points_layer(query_coords[0],query_coords[1],0,1)
+ch.query_point_in_RDLayer(0,-23.5368789998025, -46.453812, 1.0, True)
+ch.query_point_in_PBLayer(1,-23.5988, -46.63542,0.5,True)
 ```
