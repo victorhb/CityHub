@@ -1,31 +1,28 @@
 # CityHub library
-CityHub is a library to handle multiple urban datasets. It can integrate distinct urban data types in a layer-based architecture that considers four different types of layers. The integrated data is preprocessed to a common spatial domain: the set of nodes of a city street graph. The resulting data structures may be easily used to export feature vectors associated to the nodes of a street graph, enabling a multitude of analytical procedures. 
+CityHub is a library to handle multiple urban datasets. It was conceived to represent and organize multiple sources of urban data in the form of data layers that considers four different types of layers. Using edge/node projection algorithms, the integrated data is preprocessed to a common spatial domain: the nodes of a city street graph. The resulting data structures may be easily used to export feature vectors associated to the nodes of a street graph, enabling a multitude of analytical procedures. Each layer may hold multiple elements.
 
-Four types of data layers are currently available:
+In addition to city street graph data, four types of data layers are currently available:
 
-1. Point-based data layers: to represent specific types of places that can be described as a single point location, such as bus stations, restaurants, bars, etc. 
-2. Regional domain data layers: may represent areas with specific characteristics, such as subnormal agglomerates.
-3. Polygon-aggregated data layers: useful for data that is aggregated in polygonal regions, such as census sectors.
-4. Sparse data layers: used to represent data that is sparse in space and requires interpolation, such as temperature and rainfall precipitation.
+1. Point-based (PB) data layers: to represent specific types of places that can be described as a single point location, such as bus stations, restaurants, bars, etc. 
+2. Regional domain (RD) data layers: may represent areas with specific characteristics, such as subnormal agglomerates.
+3. Polygon-aggregated (PA) data layers: useful for data that is aggregated in polygonal regions, such as census sectors.
+4. Sparse data (SD) layers: used to represent data that is sparse in space and requires interpolation, such as temperature and rainfall precipitation.
 
 
 The file CityHub.py contains the source code of the CityHub library, with the following functionalities:
 
 1. load a city street graph from a Gpickle (networkX graph in pickle format); or from a city string (i.e., 'Sao Paulo, Brazil')
 2. load a polygon mesh for polygon-agreggated data purposes from a KML or SHP file
-3. generate data structures to quickly retrieve relevant information
-4. build BallTrees for fast nearest neighbour search using the haversine metric
-8. refine a city mesh or a polygon mesh to improve search accuracy
-9. load a CSV file made up of polygon-aggregated data (this functionality requires an associated polygon mesh)
-10. load a layer mesh describing poligonal areas with specific characteristics
-11. load a point-based layer describing points of interest
-12. save a preprocessed CityHub as a pickle file
-13. load a preprocessed CityHub as a pickle file
-14. query points in the city mesh, in the polygon mesh, in layer meshes, and in point-based layers. Query may be performed by radius.
-15. retrieve polygons in the star of a polygon mesh vertex
-16. retrieve features of polygons in the star of a vertex
+3. generate data structures to quickly retrieve relevant information, including BallTrees for fast nearest neighbour search using the haversine metric.
+4. load PA layers from a CSV file made up of polygon-aggregated data and its corresponding polygon mesh from KML or SHP files.
+5. load RD layers from KML or SHP files.
+6. load PB layers from KML, SHP or CSV files.
+7. load SD layers from CSV files and interpolate through Gaussian Kernels or custom kernels.
+8. query points in the city street graph using (lat,lon) pairs within a search radius by Euclidian distance or graph distance
+9. query points in PA, RD and PB layers using (lat,lon) pairs
+10. save a preprocessed CityHub as a pickle file
+11. load a preprocessed CityHub as a pickle file
 
-Information retrieval may be performed by giving a specific city mesh vertex index, or by providing lat-long coordinates, which will be projected to the nearest city mesh vertex.
 
 The following code first loads São Paulo's street mesh ('data/sp_network.gpickle'), which is refined to assure maximum edge length of 40 meters. Then, a polygon mesh (malha-sp-2010.kml) is loaded and also refined to assure maximum edge length of 40 meters. The associated CSV polygon data file (sectorsindices.csv) is then loaded. Then, the preprocessed CityHub objectred is saved to the file 'data/saopaulo.bin' for faster loading times. 
 ```
