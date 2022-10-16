@@ -57,10 +57,12 @@ class CityHub:
         """
         Load a city mesh from a file or city query string. GPICKLE (from nx.read_gpickle()) formats are accepted. Then, data structures are generated.
     
-        Parameters:
-            filename (string): city mesh filename, including the file extension, which will be used to identify the file format.
-            EDGE_LENGTH_THRESHOLD (float):maximum edge length for robust nearest neighbor search. An edge will be subdivided to 
-            assure its length is less than the threshold.
+        Parameters
+        ----------
+            filename: string
+                city mesh filename, including the file extension, which will be used to identify the file format.
+            EDGE_LENGTH_THRESHOLD: float
+                maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.
         
     """
         
@@ -139,12 +141,13 @@ class CityHub:
     
         Parameters
         ----------
-        city_string (string): city mesh filename in gpickle format (from nx.read_gpickle()), including the file 
-        extension, or a string with the city description to download from OSMnx (i.e. 'Sao Paulo, Brazil')
+        city_string: string
+            city mesh filename in gpickle format (from nx.read_gpickle()), including the file extension, or a string with the city description to download from OSMnx (i.e. 'Sao Paulo, Brazil')
         
         Returns
         -------
-            returns True if the city street graph is sucessfully loaded from file.
+            bool
+                returns True if the city street graph is sucessfully loaded from file.
         """
         
         print('Loading file...')
@@ -179,7 +182,8 @@ class CityHub:
         
         Returns
         -------
-            returns True if the preprocessing succeeds.
+            bool
+                returns True if the preprocessing succeeds.
         """   
         
         print('Preprocessing city mesh...')
@@ -370,15 +374,19 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position according to self.PALayers_mesh
-        build_tree (bool): builds a BallTree for querying
-        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
-        EDGE_LENGTH_THRESHOLD (float): maximum edge length for robust nearest neighbor search. An edge
-        will be subdivided to assure its length is less than the threshold.
+        layer: int
+            layer position according to self.PALayers_mesh
+        build_tree: bool
+            builds a BallTree for querying
+        swap_coordinates: bool
+            useful when latitude and longitude coordinates are given in the wrong order.
+        EDGE_LENGTH_THRESHOLD: float
+            maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.
         
         Returns
         -------
-            returns True if the preprocessing succeeds.
+            bool
+                returns True if the preprocessing succeeds.
         """
         
         if len(self.PALayers_mesh)<=layer:
@@ -505,13 +513,17 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position according to self.PALayers_mesh.
-        filename (string): CSV filename. 
-        polygon_key_column (string): Name of the key column of the CSV file that matches the polygon's key column PALayers_mesh_keycolumn of the corresponding PA Layer.
+        layer: int
+            layer position according to self.PALayers_mesh.
+        filename: string
+            CSV filename.
+        polygon_key_column: string
+            Name of the key column of the CSV file that matches the polygon's key column PALayers_mesh_keycolumn of the corresponding PA Layer.
         
         Returns
         -------
-            returns True if the CSV file is succesfully loaded.
+            bool
+                returns True if the CSV file is succesfully loaded.
         """
         try:
             self.PALayers_csv_data[layer]=pd.read_csv(filename)
@@ -534,7 +546,8 @@ class CityHub:
     
         Parameters
         ----------
-        layer (float): layer position according to self.PALayers_mesh.
+        layer: float
+            layer position according to self.PALayers_mesh.
         lat: float
             latitude of the query point
         long: float
@@ -569,11 +582,14 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position according to self.PALayers_mesh
-        vert_ind (int): vertex index (according to city_vert_list indexing)
+        layer: int
+            layer position according to self.PALayers_mesh
+        vert_ind: int
+            vertex index (according to city_vert_list indexing)
         Returns
         -------
-            a list of polygon keys, according to self.PALayers_mesh_keycolumn[layer], or an empty list in case of an issue
+            list
+                a list of polygon keys, according to self.PALayers_mesh_keycolumn[layer], or an empty list in case of an issue
         """        
         try:
             self.PALayers_aggregated_polygon_vertices_indices_dict[layer]
@@ -591,12 +607,16 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position according to self.PALayers_mesh.
-        vert_ind (int): vertex index (according to city_vert_list indexing)
-        feature (string): feature name to be retrieved from each neighbour polygon.
+        layer: int
+            layer position according to self.PALayers_mesh.
+        vert_ind: int
+            vertex index (according to city_vert_list indexing)
+        feature: string
+            feature name to be retrieved from each neighbour polygon.
         Returns
         -------
-            a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
+            list
+                a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
         """
         
         if not feature in self.PALayers_csv_data[layer].columns:
@@ -618,13 +638,18 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position according to self.PALayers_mesh.
-        lat (float): latitude of the query point.
-        long (float): longitude of the query point.
-        feature (string): feature name to be retrieved from each neighbour polygon.
+        layer: int
+            layer position according to self.PALayers_mesh.
+        lat: float
+            latitude of the query point.
+        long: float
+            longitude of the query point.
+        feature: string
+            feature name to be retrieved from each neighbour polygon.
         Returns
         -------
-            a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
+            list
+                a list of the features 'feature' from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.
         """        
         
         if not feature in self.PALayers_csv_data[layer].columns:
@@ -649,14 +674,17 @@ class CityHub:
     
         Parameters
         ----------
-        filename (string): mesh filename, including the file extension, which will be used to identify the file format.
-        preprocess (bool): calls preprocess_RDLayer if True.
-        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
+        filename: string
+            mesh filename, including the file extension, which will be used to identify the file format.
+        preprocess: bool
+            calls preprocess_RDLayer if True.
+        swap_coordinates: bool
+            useful when latitude and longitude coordinates are given in the wrong order.
         
         Returns
         -------
-            returns an integer representing the layer dataframe position in self.RDLayers if the mesh is
-            sucessfully loaded from file, or -1 otherwise.
+            int
+                an integer representing the layer dataframe position in self.RDLayers if the mesh is sucessfully loaded from file, or -1 otherwise.
         """
         extension_str = filename[-3:]
         if(extension_str.lower()=='kml'):
@@ -681,13 +709,19 @@ class CityHub:
         """
         Generate data structures to quickly retrieve relevant information from RDLayer meshes. The layer must be loaded first.
     
-        Parameters:
-        layer (int): layer position according to self.RDLayers.
-        build_tree (bool): builds a BallTree for querying.
-        swap_coordinates (bool): useful when latitude and longitude coordinates are given in the wrong order.
+        Parameters
+        ----------
+        layer: int
+            layer position according to self.RDLayers.
+        build_tree: bool
+            builds a BallTree for querying.
+        swap_coordinates: bool
+            useful when latitude and longitude coordinates are given in the wrong order.
         
-        Returns:
-            bool: returns True if the preprocessing succeeds.
+        Returns
+        --------
+            bool
+                true if the preprocessing succeeds.
         """
         
         if len(self.RDLayers)<=layer:
@@ -775,11 +809,16 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position to be searched, according to self.RDLayers
-        lat (float): latitude of the query point
-        long (float): longitude of the query point       
-        radius (float): maximum Euclidian distance to search points, in kilometers
-        unique (bool): whether to return a single point per area (polygon), within the distance radius. The nearest point of each area is returned.
+        layer: int
+            layer position to be searched, according to self.RDLayers
+        lat: float
+            latitude of the query point
+        long: float
+            longitude of the query point
+        radius: float
+            maximum Euclidian distance to search points, in kilometers
+        unique: bool
+            whether to return a single point per area (polygon), within the distance radius. The nearest point of each area is returned.
             
         Returns
         -------
@@ -861,15 +900,21 @@ class CityHub:
     
         Parameters
         ----------
-        filename (string): CSV filename. 
-        lat_key_column (string): Name of the key column of the CSV file that matches the latitude.
-        lng_key_column (string): Name of the key column of the CSV file that matches the longitude.
-        build_tree (bool): Whether to build a BallTree of the layer points.
-        project_to_corners (bool): Whether to project all points to the nearest corner.
+        filename: string
+            CSV filename
+        lat_key_column: string
+            Name of the key column of the CSV file that matches the latitude
+        lng_key_column: string
+            Name of the key column of the CSV file that matches the longitude.
+        build_tree: bool
+            Whether to build a BallTree of the layer points.
+        project_to_corners: bool
+            Whether to project all points to the nearest corner.
         
         Returns
         -------
-            returns True if the CSV file is succesfully loaded.
+            bool
+                True if the CSV file is succesfully loaded.
         """
         try:
             pointdf = pd.read_csv(filename)
@@ -915,12 +960,15 @@ class CityHub:
     
         Parameters
         ----------
-        layer (int): layer position according to self.PBLayers
-        build_tree (bool): builds a BallTree for querying
+        layer: int
+            layer position according to self.PBLayers
+        build_tree: bool
+            builds a BallTree for querying
         
         Returns
         -------
-            returns True if the preprocessing succeeds.
+            bool
+                returns True if the preprocessing succeeds.
         """
 
         if len(self.PBLayers)<=layer:
@@ -948,15 +996,21 @@ class CityHub:
         
         Parameters
         ----------
-        layer (int): layer to be searched, according to its position in self.PBLayers
-        lat (float): latitude of the query point
-        long (float): longitude of the query point       
-        radius (float): maximum Euclidian distance to search points, in kilometers
+        layer: int
+            layer to be searched, according to its position in self.PBLayers
+        lat: float
+            latitude of the query point
+        long: float
+            longitude of the query point
+        radius: float
+            maximum Euclidian distance to search points, in kilometers
         return_nearest_indices: bool
             whether to return the nearest point indices (according to PBLayers[layer] indexing) or a list of lat-long tuples
+            
         Returns
-        -------PALayers_aggregated_polygon_vertices_indices_dict
-            a list of points within maximum distance to the query point, sorted by Euclidean distance.
+        -------
+            list
+                a list of points within maximum distance to the query point, sorted by Euclidean distance.
         """
         
         try:
@@ -989,7 +1043,8 @@ class CityHub:
         
         Returns
         -------
-            returns True if the file is sucessfully loaded.
+            bool
+                returns True if the file is sucessfully loaded.
         """
                                               
         try:
@@ -1014,7 +1069,8 @@ class CityHub:
        
        Returns
        -------
-           returns True if the file is sucessfully loaded.
+           bool
+                returns True if the file is sucessfully loaded.
        """
                                              
        try:
@@ -1040,7 +1096,8 @@ class CityHub:
         
         Returns
         -------
-            returns True if the file is sucessfully loaded.
+            bool
+                returns True if the file is sucessfully loaded.
         """
                                               
         try:
@@ -1072,8 +1129,8 @@ class CityHub:
         
         Returns
         -------
-            returns a NxM array indicating the kernel coefficient for each
-            point of interest versus each measurement point.
+            numpy array
+                returns a NxM array indicating the kernel coefficient for each point of interest versus each measurement point.
         """
         
         # Compute all distances between X and Xm
@@ -1116,8 +1173,8 @@ class CityHub:
         
         Returns
         -------
-            returns a NxT array indicating estimation for each point of
-            interest and time slot.
+            numpy array
+                returns a NxT array indicating estimation for each point of interest and time slot.
         """
         
         M = Xm.shape[0]
@@ -1177,10 +1234,8 @@ class CityHub:
         
         Returns
         -------
-            returns a dataframe of shape (num_query_points, num_time_steps),
-            or False if parameters passed were not possible to make
-            estimations. If a dataframe is passed in query_points, dataframe
-            returned is input dataframe with added columns.
+            DataFrame
+                returns a dataframe of shape (num_query_points, num_time_steps), or False if parameters passed were not possible to make estimations. If a dataframe is passed in query_points, datakernel_gaussianframe returned is input dataframe with added columns.
         """
         
         initial_date = pd.to_datetime(initial_date,dayfirst=True)
@@ -1262,10 +1317,8 @@ class CityHub:
         
         Returns
         -------
-            returns a dataframe of shape (num_query_points, num_time_steps),
-            or False if parameters passed were not possible to make estimations.
-            If a dataframe is passed in query_points, dataframe returned is input
-            dataframe with added columns.
+            DataFrame
+                returns a dataframe of shape (num_query_points, num_time_steps), or False if parameters passed were not possible to make estimations. If a dataframe is passed in query_points, dataframe returned is input dataframe with added columns.
         """
         
         if temp_agg_func not in ['sum', 'mean', 'min', 'max']:
@@ -1321,7 +1374,7 @@ class CityHub:
        Aggregate measurements from all sparse variable from initial_date to
        final_date using temp_agg_funcs given by self.SMLayers_temp_agg_funcs
        to obtain a single number for each measurement point. Then estimates
-       the measurement in all graph vertices based on these numbers.
+       the measurement in all graph vertices based on these numbers. This method modifies the property self.SMLayers_estimated_measurements.
    
        Parameters
        ----------                      
@@ -1341,8 +1394,8 @@ class CityHub:
        
        Returns
        -------
-           returns True if the computation if sucessfull (this method modifies
-           the property self.SMLayers_estimated_measurements).
+           bool
+              True if the computation if successfull.
        """
        
        measurement_point = self.SMLayers_measurements_points_info.index[0]
@@ -1384,10 +1437,12 @@ class CityHub:
         
         Parameters
         ----------
-        vert_ind (int): vertex index from city mesh
+        vert_ind: int
+            vertex index from city mesh
         Returns
         -------
-            A list with a feature vector from vert_ind 
+            list
+                feature vectors from vert_ind
         """     
 
         return []
@@ -1395,12 +1450,7 @@ class CityHub:
      def compute_all_feature_vectors(self):
         """
         Compute the feature vectors of all vertices of the city street graph, and assign them to self.feature_vecs
-        
-        Parameters
-        ----------
-        
-        Returns
-        -------
+
             
         """
         self.feature_vecs = [self.compute_feature_vector(vert_ind) for vert_ind in range(len(self.city_vert_list))]
@@ -1411,14 +1461,17 @@ def convert_deg_query(lat, long):
 
 def load_preprocessed_CityHub(filename):
     """
-        Load a preprocessed CityHub file
+        Load a preprocessed CityHub file.
         
         Parameters
         ----------
-        filename (string): pickle file
+        filename: string
+            pickle file
+            
         Returns
         -------
-        Return a CityHub instance
+            CityHub
+                CityHub instance
         """ 
 
     with open(filename, 'rb') as f:
