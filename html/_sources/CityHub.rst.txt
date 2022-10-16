@@ -1,0 +1,21 @@
+CityHub package
+===============
+
+Submodules
+----------
+
+CityHub.CityHub module
+----------------------
+
+.. automodule:: CityHub.CityHub
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: CityHub
+   :members:
+   :undoc-members:
+   :show-inheritance:
