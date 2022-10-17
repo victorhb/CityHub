@@ -8,6 +8,9 @@ In addition to city street graph data, four types of data layers are currently a
 3. Polygon-aggregated (PA) data layers: useful for data that is aggregated in polygonal regions, such as census sectors.
 4. Sparse data (SD) layers: used to represent data that is sparse in space and requires interpolation, such as temperature and rainfall precipitation.
 
+<p align="center">
+<img src="architecture.png" width=500>
+</p>
 
 The file CityHub.py contains the source code of the CityHub library, with the following functionalities:
 
