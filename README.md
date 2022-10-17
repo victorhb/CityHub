@@ -57,8 +57,8 @@ ch.query_point_in_RDLayer(0,-23.5368789998025, -46.453812, 1.0, True)
 ch.query_point_in_PBLayer(1,-23.5988, -46.63542,0.5,True)
 ```
 
-Please cite our paper in your work:
-
+If you use CityHub for research purposes, please cite our paper in your work:
+```
 @inproceedings{CityHub2022,
 author={Karelia Salinas and Thales Gonçalves and Victor Barella and Thales Vieira and Luis Gustavo Nonato},
 title={CityHub: A Library for Urban Data Integration},
@@ -66,3 +66,4 @@ booktitle={2022 35nd SIBGRAPI Conference on Graphics, Patterns and Images (SIBGR
 year={2022},
 organization={IEEE}
 }
+```
