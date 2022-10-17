@@ -1,5 +1,5 @@
 # CityHub library
-CityHub is a library to handle multiple urban datasets. It was conceived to represent and organize multiple sources of urban data in the form of data layers that considers four different types of layers. Using edge/node projection algorithms, the integrated data is preprocessed to a common spatial domain: the nodes of a city street graph. The resulting data structures may be easily used to export feature vectors associated to the nodes of a street graph, enabling a multitude of analytical procedures. Each layer may hold multiple elements.
+CityHub is a library to handle multiple urban datasets. It was conceived to represent and organize multiple sources of urban data in the form of data layers that considers four different types of layers. Using edge/node projection algorithms, the integrated data is preprocessed to a common spatial domain: the nodes of a city street graph. The resulting data structures may be easily used to export feature vectors associated to the nodes of a street graph, enabling a multitude of analytical procedures. Each layer may hold multiple elements. For more details, see our paper [CityHub: A Library for Urban Data Integration](http://sibgrapi.sid.inpe.br/col/sid.inpe.br/sibgrapi/2022/09.14.21.46/doc/sibgrapi2022_cityhub-preprint.pdf)
 
 In addition to city street graph data, four types of data layers are currently available:
 
@@ -56,3 +56,13 @@ Following the same code, a specific (lat,lon) pair is queried in the subnormal a
 ch.query_point_in_RDLayer(0,-23.5368789998025, -46.453812, 1.0, True)
 ch.query_point_in_PBLayer(1,-23.5988, -46.63542,0.5,True)
 ```
+
+Please cite our paper in your work:
+
+@inproceedings{CityHub2022,
+author={Karelia Salinas and Thales Gonçalves and Victor Barella and Thales Vieira and Luis Gustavo Nonato},
+title={CityHub: A Library for Urban Data Integration},
+booktitle={2022 35nd SIBGRAPI Conference on Graphics, Patterns and Images (SIBGRAPI)},
+year={2022},
+organization={IEEE}
+}
