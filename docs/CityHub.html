@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityHub package &mdash; CityHub 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CityHub
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">CityHub package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-CityHub.CityHub">CityHub.CityHub module</a><ul>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub"><code class="docutils literal notranslate"><span class="pre">CityHub</span></code></a><ul>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.city_street_graph"><code class="docutils literal notranslate"><span class="pre">CityHub.city_street_graph</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.city_vert_list"><code class="docutils literal notranslate"><span class="pre">CityHub.city_vert_list</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.city_vert_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.city_vert_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.city_tree"><code class="docutils literal notranslate"><span class="pre">CityHub.city_tree</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.city_vert_ind_to_nxind_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.city_vert_ind_to_nxind_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.city_vert_nxind_to_ind_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.city_vert_nxind_to_ind_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.refined_city_vert_correspondence_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.refined_city_vert_correspondence_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.refined_city_vert_list"><code class="docutils literal notranslate"><span class="pre">CityHub.refined_city_vert_list</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.refined_city_vert_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.refined_city_vert_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.RDLayers"><code class="docutils literal notranslate"><span class="pre">CityHub.RDLayers</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.RDLayers_vert_list"><code class="docutils literal notranslate"><span class="pre">CityHub.RDLayers_vert_list</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.RDLayers_balltree"><code class="docutils literal notranslate"><span class="pre">CityHub.RDLayers_balltree</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.RDLayers_area_vertices_indices_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.RDLayers_area_vertices_indices_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.RDLayers_area_vertices_coords_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.RDLayers_area_vertices_coords_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.RDLayers_vertices_area_dict"><code class="docutils literal notranslate"><span class="pre">CityHub.RDLayers_vertices_area_dict</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PBLayers"><code class="docutils literal notranslate"><span class="pre">CityHub.PBLayers</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PBLayers_balltree"><code class="docutils literal notranslate"><span class="pre">CityHub.PBLayers_balltree</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PBLayers_csv_lat_key_column"><code class="docutils literal notranslate"><span class="pre">CityHub.PBLayers_csv_lat_key_column</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PBLayers_csv_lng_key_column"><code class="docutils literal notranslate"><span class="pre">CityHub.PBLayers_csv_lng_key_column</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PBLayers_corner_projection_dicts"><code class="docutils literal notranslate"><span class="pre">CityHub.PBLayers_corner_projection_dicts</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PALayers_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.PALayers_mesh</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PALayers_mesh_keycolumn"><code class="docutils literal notranslate"><span class="pre">CityHub.PALayers_mesh_keycolumn</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PALayers_csv_data"><code class="docutils literal notranslate"><span class="pre">CityHub.PALayers_csv_data</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.PALayers_csv_keycolumn"><code class="docutils literal notranslate"><span class="pre">CityHub.PALayers_csv_keycolumn</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.SMLayers_known_measurements"><code class="docutils literal notranslate"><span class="pre">CityHub.SMLayers_known_measurements</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.SMLayers_temp_agg_funcs"><code class="docutils literal notranslate"><span class="pre">CityHub.SMLayers_temp_agg_funcs</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.SMLayers_measurements_points_info"><code class="docutils literal notranslate"><span class="pre">CityHub.SMLayers_measurements_points_info</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.SMLayers_estimated_measurements"><code class="docutils literal notranslate"><span class="pre">CityHub.SMLayers_estimated_measurements</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.__init__"><code class="docutils literal notranslate"><span class="pre">CityHub.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.compute_all_feature_vectors"><code class="docutils literal notranslate"><span class="pre">CityHub.compute_all_feature_vectors()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.compute_feature_vector"><code class="docutils literal notranslate"><span class="pre">CityHub.compute_feature_vector()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.compute_layer_sparse"><code class="docutils literal notranslate"><span class="pre">CityHub.compute_layer_sparse()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.kernel_estimation"><code class="docutils literal notranslate"><span class="pre">CityHub.kernel_estimation()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.kernel_gaussian"><code class="docutils literal notranslate"><span class="pre">CityHub.kernel_gaussian()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_PALayer_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.load_PALayer_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_PALayers_csv_data"><code class="docutils literal notranslate"><span class="pre">CityHub.load_PALayers_csv_data()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_PBLayer"><code class="docutils literal notranslate"><span class="pre">CityHub.load_PBLayer()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_PBLayer_csv_data"><code class="docutils literal notranslate"><span class="pre">CityHub.load_PBLayer_csv_data()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_RDLayer"><code class="docutils literal notranslate"><span class="pre">CityHub.load_RDLayer()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_SMLayers_known_measurements"><code class="docutils literal notranslate"><span class="pre">CityHub.load_SMLayers_known_measurements()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_SMLayers_measurements_points_info"><code class="docutils literal notranslate"><span class="pre">CityHub.load_SMLayers_measurements_points_info()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_SMLayers_temp_agg_funcs"><code class="docutils literal notranslate"><span class="pre">CityHub.load_SMLayers_temp_agg_funcs()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.load_city_street_graph"><code class="docutils literal notranslate"><span class="pre">CityHub.load_city_street_graph()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.polygon_features_from_PALayer_vertex"><code class="docutils literal notranslate"><span class="pre">CityHub.polygon_features_from_PALayer_vertex()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.polygon_features_from_coords"><code class="docutils literal notranslate"><span class="pre">CityHub.polygon_features_from_coords()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.polygons_from_PALayer_vertex"><code class="docutils literal notranslate"><span class="pre">CityHub.polygons_from_PALayer_vertex()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.preprocess_PALayer_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.preprocess_PALayer_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.preprocess_RDLayer"><code class="docutils literal notranslate"><span class="pre">CityHub.preprocess_RDLayer()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.preprocess_city_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.preprocess_city_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.project_PBLayer_to_corners"><code class="docutils literal notranslate"><span class="pre">CityHub.project_PBLayer_to_corners()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.query_point_in_PALayer_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.query_point_in_PALayer_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.query_point_in_PBLayer"><code class="docutils literal notranslate"><span class="pre">CityHub.query_point_in_PBLayer()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.query_point_in_RDLayer"><code class="docutils literal notranslate"><span class="pre">CityHub.query_point_in_RDLayer()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.query_point_in_city_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.query_point_in_city_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.query_point_in_graph_radius_in_city_mesh"><code class="docutils literal notranslate"><span class="pre">CityHub.query_point_in_graph_radius_in_city_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.save_preprocessed_CityHub"><code class="docutils literal notranslate"><span class="pre">CityHub.save_preprocessed_CityHub()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.sparse_agg_estimation"><code class="docutils literal notranslate"><span class="pre">CityHub.sparse_agg_estimation()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.CityHub.sparse_ts_estimation"><code class="docutils literal notranslate"><span class="pre">CityHub.sparse_ts_estimation()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#CityHub.CityHub.convert_deg_query"><code class="docutils literal notranslate"><span class="pre">convert_deg_query()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.load_preprocessed_CityHub"><code class="docutils literal notranslate"><span class="pre">load_preprocessed_CityHub()</span></code></a></li>
+<li><a class="reference internal" href="#CityHub.CityHub.utm_to_latlon"><code class="docutils literal notranslate"><span class="pre">utm_to_latlon()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-CityHub">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CityHub</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>CityHub package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/CityHub.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cityhub-package">
+<h1>CityHub package<a class="headerlink" href="#cityhub-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-CityHub.CityHub">
+<span id="cityhub-cityhub-module"></span><h2>CityHub.CityHub module<a class="headerlink" href="#module-CityHub.CityHub" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CityHub.CityHub.</span></span><span class="sig-name descname"><span class="pre">CityHub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EDGE_LENGTH_THRESHOLD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>CityHub class for urban data integration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.city_street_graph">
+<span class="sig-name descname"><span class="pre">city_street_graph</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.city_street_graph" title="Permalink to this definition"></a></dt>
+<dd><p>A networkX undirected graph representing the city street graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.city_vert_list">
+<span class="sig-name descname"><span class="pre">city_vert_list</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.city_vert_list" title="Permalink to this definition"></a></dt>
+<dd><p>List of vertices coordinates tuples of city street graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.city_vert_dict">
+<span class="sig-name descname"><span class="pre">city_vert_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.city_vert_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of vertices coordinates of city street graph. Keys are coordinates, and values are its city_vert_list indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.city_tree">
+<span class="sig-name descname"><span class="pre">city_tree</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.city_tree" title="Permalink to this definition"></a></dt>
+<dd><p>BallTree of refined city street graph vertices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>BallTree</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.city_vert_ind_to_nxind_dict">
+<span class="sig-name descname"><span class="pre">city_vert_ind_to_nxind_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.city_vert_ind_to_nxind_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary to convert from city_vert_list indices to NetworkX indices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.city_vert_nxind_to_ind_dict">
+<span class="sig-name descname"><span class="pre">city_vert_nxind_to_ind_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.city_vert_nxind_to_ind_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary to convert from NetworkX indices to city_vert_list indices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.refined_city_vert_correspondence_dict">
+<span class="sig-name descname"><span class="pre">refined_city_vert_correspondence_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.refined_city_vert_correspondence_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of correspondences between original and refined city street graph vertices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.refined_city_vert_list">
+<span class="sig-name descname"><span class="pre">refined_city_vert_list</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.refined_city_vert_list" title="Permalink to this definition"></a></dt>
+<dd><p>List of refined vertices coordinates tuples of city street graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.refined_city_vert_dict">
+<span class="sig-name descname"><span class="pre">refined_city_vert_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.refined_city_vert_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of refined vertices coordinates of city street graph. Keys are coordinates, and values are its refined_city_vert_list indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.RDLayers">
+<span class="sig-name descname"><span class="pre">RDLayers</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.RDLayers" title="Permalink to this definition"></a></dt>
+<dd><p>The list of Regional Domain (RD) Layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.RDLayers_vert_list">
+<span class="sig-name descname"><span class="pre">RDLayers_vert_list</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.RDLayers_vert_list" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of lists of RD Layers vertices coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.RDLayers_balltree">
+<span class="sig-name descname"><span class="pre">RDLayers_balltree</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.RDLayers_balltree" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of BallTrees of RDLayers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>BallTree</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.RDLayers_area_vertices_indices_dict">
+<span class="sig-name descname"><span class="pre">RDLayers_area_vertices_indices_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.RDLayers_area_vertices_indices_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of dictionaries for each RD layer, where the key is an area index and the value is a list with the indices of its vertices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.RDLayers_area_vertices_coords_dict">
+<span class="sig-name descname"><span class="pre">RDLayers_area_vertices_coords_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.RDLayers_area_vertices_coords_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of dictionaries for each RD layer, where the key is an area index, and the value is a list with the coordinates of its vertices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.RDLayers_vertices_area_dict">
+<span class="sig-name descname"><span class="pre">RDLayers_vertices_area_dict</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.RDLayers_vertices_area_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of dictionaries for each RD layer, where the key is a vertex index, and the value is its area</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PBLayers">
+<span class="sig-name descname"><span class="pre">PBLayers</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PBLayers" title="Permalink to this definition"></a></dt>
+<dd><p>The list of Point-based (PB) Layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PBLayers_balltree">
+<span class="sig-name descname"><span class="pre">PBLayers_balltree</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PBLayers_balltree" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of BallTrees of PBLayers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PBLayers_csv_lat_key_column">
+<span class="sig-name descname"><span class="pre">PBLayers_csv_lat_key_column</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PBLayers_csv_lat_key_column" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of the key latitude column of each PB Layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PBLayers_csv_lng_key_column">
+<span class="sig-name descname"><span class="pre">PBLayers_csv_lng_key_column</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PBLayers_csv_lng_key_column" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of the key longitude column of each PB Layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PBLayers_corner_projection_dicts">
+<span class="sig-name descname"><span class="pre">PBLayers_corner_projection_dicts</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PBLayers_corner_projection_dicts" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of dictionaries, being one for each corner of the city street graph, holding points from the corresponding PBLayer that are projected to that corner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PALayers_mesh">
+<span class="sig-name descname"><span class="pre">PALayers_mesh</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PALayers_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>The list of the meshes of the Polygon-Aggregated (PA) layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PALayers_mesh_keycolumn">
+<span class="sig-name descname"><span class="pre">PALayers_mesh_keycolumn</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PALayers_mesh_keycolumn" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of the key column of each PA layer mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PALayers_csv_data">
+<span class="sig-name descname"><span class="pre">PALayers_csv_data</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PALayers_csv_data" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of dataframes of each PA layer, holding data from CSV files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.PALayers_csv_keycolumn">
+<span class="sig-name descname"><span class="pre">PALayers_csv_keycolumn</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.PALayers_csv_keycolumn" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary of the key column of each PA layer CSV data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.SMLayers_known_measurements">
+<span class="sig-name descname"><span class="pre">SMLayers_known_measurements</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.SMLayers_known_measurements" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary with all time series for each measurement point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.SMLayers_temp_agg_funcs">
+<span class="sig-name descname"><span class="pre">SMLayers_temp_agg_funcs</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.SMLayers_temp_agg_funcs" title="Permalink to this definition"></a></dt>
+<dd><p>Dictionary with the temporal aggregation function for each measurement variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.SMLayers_measurements_points_info">
+<span class="sig-name descname"><span class="pre">SMLayers_measurements_points_info</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.SMLayers_measurements_points_info" title="Permalink to this definition"></a></dt>
+<dd><p>Dataframe with information (e.g. lat, lng) of each measurement point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.SMLayers_estimated_measurements">
+<span class="sig-name descname"><span class="pre">SMLayers_estimated_measurements</span></span><a class="headerlink" href="#CityHub.CityHub.CityHub.SMLayers_estimated_measurements" title="Permalink to this definition"></a></dt>
+<dd><p>DataFrame with estimations for all measurement variables for each corner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EDGE_LENGTH_THRESHOLD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Load a city mesh from a file or city query string. GPICKLE (from nx.read_gpickle()) formats are accepted. Then, data structures are generated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – city mesh filename, including the file extension, which will be used to identify the file format.</p></li>
+<li><p><strong>EDGE_LENGTH_THRESHOLD</strong> (<em>float</em>) – maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.compute_all_feature_vectors">
+<span class="sig-name descname"><span class="pre">compute_all_feature_vectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.compute_all_feature_vectors" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the feature vectors of all vertices of the city street graph, and assign them to self.feature_vecs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.compute_feature_vector">
+<span class="sig-name descname"><span class="pre">compute_feature_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vert_ind</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.compute_feature_vector" title="Permalink to this definition"></a></dt>
+<dd><p>Create your own method to compute a feature vector given a vertex index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vert_ind</strong> (<em>int</em>) – vertex index from city mesh</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>feature vectors from vert_ind</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.compute_layer_sparse">
+<span class="sig-name descname"><span class="pre">compute_layer_sparse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.compute_layer_sparse" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregate measurements from all sparse variable from initial_date to
+final_date using temp_agg_funcs given by self.SMLayers_temp_agg_funcs
+to obtain a single number for each measurement point. Then estimates
+the measurement in all graph vertices based on these numbers. This method modifies the property self.SMLayers_estimated_measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>initial_date</strong> (<em>str</em>) – date (in format dd-mm-yyyy) from which estimation will be made.</p></li>
+<li><p><strong>final_date</strong> (<em>str</em>) – date (in format dd-mm-yyyy) until which estimation will be made.</p></li>
+<li><p><strong>kernel_function</strong> (<em>function</em><em> or </em><em>'auto'</em>) – function expecting as input X (Nx2) and Xm (Mx2) as above and
+returning a NxM array of kernel coefficients for each point of
+interest versus each measurement point. By default (‘auto’),
+computes coefficients using a gaussian kernel with standard
+deviation equals half the average distance between two different
+measurement point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the computation if successfull.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.kernel_estimation">
+<span class="sig-name descname"><span class="pre">kernel_estimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ym</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.kernel_estimation" title="Permalink to this definition"></a></dt>
+<dd><p>Auxiliar function for sparse_estimation(). Uses kernel coefficients to
+estimate outputs from X based on known Xm to Ym mapping and
+kernel_function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>2-array</em>) – Nx2 array indicating lat-lng location of each point in which
+estimation will be made (N = number of points of interest).</p></li>
+<li><p><strong>Xm</strong> (<em>2-array</em>) – Mx2 array indicating lat-lng location of each measurement point on
+which estimaton will be based (M = number of points of known
+measurements).</p></li>
+<li><p><strong>Ym</strong> (<em>2-array</em>) – TxM array indicating time series measured in each measurement
+point (T = number of time slots).</p></li>
+<li><p><strong>kernel_function</strong> (<em>function</em><em> or </em><em>'auto'</em>) – function expecting as input X (Nx2) and Xm (Mx2) as above and
+returning a NxM array of kernel coefficients for each point of
+interest versus each measurement point. By default (‘auto’),
+computes coefficients using a gaussian kernel with standard
+deviation equals half the average distance between two different
+measurement point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns a NxT array indicating estimation for each point of interest and time slot.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.kernel_gaussian">
+<span class="sig-name descname"><span class="pre">kernel_gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.kernel_gaussian" title="Permalink to this definition"></a></dt>
+<dd><p>Apply gaussian kernel centered at measurement points Xm with
+standard deviation sigma and assess kernel coefficients at X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>2-array</em>) – Nx2 array indicating lat-lng location of each point in which
+estimation will be made (N = number of points of interest).</p></li>
+<li><p><strong>Xm</strong> (<em>2-array</em>) – Mx2 array indicating lat-lng location of each measurement point on
+which estimaton will be based (M = number of points of known
+measurements).</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – Standard deviation of the gaussian kernel employed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns a NxM array indicating the kernel coefficient for each point of interest versus each measurement point.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_PALayer_mesh">
+<span class="sig-name descname"><span class="pre">load_PALayer_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Name'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EDGE_LENGTH_THRESHOLD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.7976931348623157e+308</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_PALayer_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Load a Polygon-Aggregated Layer mesh from a file for polygon-aggregated data purposes,
+such as census sectors data. KML and SHP formats are accepted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – city mesh filename, including the file extension, which will be used to identify the file format.</p></li>
+<li><p><strong>key_column</strong> (<em>string</em>) – name of the key column of each polygon (or row of the dataframe)</p></li>
+<li><p><strong>EDGE_LENGTH_THRESHOLD</strong> (<em>float</em>) – maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>returns the layer index or -1 if it fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_PALayers_csv_data">
+<span class="sig-name descname"><span class="pre">load_PALayers_csv_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polygon_key_column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_PALayers_csv_data" title="Permalink to this definition"></a></dt>
+<dd><p>Load a CSV file made up of polygon-aggregated data and generate datadf dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.PALayers_mesh.</p></li>
+<li><p><strong>filename</strong> (<em>string</em>) – CSV filename.</p></li>
+<li><p><strong>polygon_key_column</strong> (<em>string</em>) – Name of the key column of the CSV file that matches the polygon’s key column PALayers_mesh_keycolumn of the corresponding PA Layer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the CSV file is succesfully loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_PBLayer">
+<span class="sig-name descname"><span class="pre">load_PBLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">23</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone_letter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'K'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_PBLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Load a SHP or KML file made up of places that are georreferenced as single points (positions) in UTM format. Points are converted to lat-long format and stored in self.PBLayers[layer][‘latlong’] as tuples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – SHP filename.</p></li>
+<li><p><strong>zone_number</strong> (<em>int</em>) – Zone number. For SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Paulo, use 23.</p></li>
+<li><p><strong>zone_letter</strong> (<em>string</em>) – Zone letter. For SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Paulo, use “K”.</p></li>
+<li><p><strong>build_tree</strong> (<em>bool</em>) – Whether to build a BallTree of the layer points.</p></li>
+<li><p><strong>error_x</strong> (<em>float</em>) – Translate the first UTM coordinates if the source is wrong.</p></li>
+<li><p><strong>error_y</strong> (<em>float</em>) – Translate the second UTM coordinates if the source is wrong.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>returns the layer index or -1 if it fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_PBLayer_csv_data">
+<span class="sig-name descname"><span class="pre">load_PBLayer_csv_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_key_column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng_key_column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_to_corners</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_PBLayer_csv_data" title="Permalink to this definition"></a></dt>
+<dd><p>Load a CSV file made up of coordinates data and appends it to a PBLayer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – CSV filename</p></li>
+<li><p><strong>lat_key_column</strong> (<em>string</em>) – Name of the key column of the CSV file that matches the latitude</p></li>
+<li><p><strong>lng_key_column</strong> (<em>string</em>) – Name of the key column of the CSV file that matches the longitude.</p></li>
+<li><p><strong>build_tree</strong> (<em>bool</em>) – Whether to build a BallTree of the layer points.</p></li>
+<li><p><strong>project_to_corners</strong> (<em>bool</em>) – Whether to project all points to the nearest corner.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the CSV file is succesfully loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_RDLayer">
+<span class="sig-name descname"><span class="pre">load_RDLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swap_coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_RDLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Load a Regional Domain Layer describing a specific area, such as subnormal agglomerates, from a mesh file.
+KML and SHP formats are accepted.
+In case of success, a GeoDataFrame will be created and appended to the list self.RDLayers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – mesh filename, including the file extension, which will be used to identify the file format.</p></li>
+<li><p><strong>preprocess</strong> (<em>bool</em>) – calls preprocess_RDLayer if True.</p></li>
+<li><p><strong>swap_coordinates</strong> (<em>bool</em>) – useful when latitude and longitude coordinates are given in the wrong order.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an integer representing the layer dataframe position in self.RDLayers if the mesh is sucessfully loaded from file, or -1 otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_SMLayers_known_measurements">
+<span class="sig-name descname"><span class="pre">load_SMLayers_known_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measu_point_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measu_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_SMLayers_known_measurements" title="Permalink to this definition"></a></dt>
+<dd><p>Load a dataframe from csv file corresponding to time series of
+measurements taken on a single measurement point tagged ‘measu_point_name’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measu_point_name</strong> (<em>str</em>) – tag for the name of the measurement measu_point_name.</p></li>
+<li><p><strong>measu_filename</strong> (<em>str</em>) – filename in csv format containing temporal informations about
+measurements from a single measurement point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the file is sucessfully loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_SMLayers_measurements_points_info">
+<span class="sig-name descname"><span class="pre">load_SMLayers_measurements_points_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_SMLayers_measurements_points_info" title="Permalink to this definition"></a></dt>
+<dd><p>Load a dataframe from csv file corresponding to informations about all
+measurement points (e.g. lat, lng, initial measurement date, final
+measurement date).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>info_filename</strong> (<em>str</em>) – filename in csv format containing informations about all
+measurement points.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the file is sucessfully loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_SMLayers_temp_agg_funcs">
+<span class="sig-name descname"><span class="pre">load_SMLayers_temp_agg_funcs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_SMLayers_temp_agg_funcs" title="Permalink to this definition"></a></dt>
+<dd><p>Load a dataframe from csv file corresponding to informations about all
+measurement temporal aggregation functions (e.g. sum, mean, max, min).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>info_filename</strong> (<em>str</em>) – filename in csv format containing informations about all
+measurement temporal aggregation functions.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the file is sucessfully loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.load_city_street_graph">
+<span class="sig-name descname"><span class="pre">load_city_street_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">city_string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.load_city_street_graph" title="Permalink to this definition"></a></dt>
+<dd><p>Load a city street graph from OMSnx library city query string, or a gpickle.
+In case of success, the Graph city_street_graph will be created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>city_string</strong> (<em>string</em>) – city mesh filename in gpickle format (from nx.read_gpickle()), including the file extension, or a string with the city description to download from OSMnx (i.e. ‘Sao Paulo, Brazil’)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the city street graph is sucessfully loaded from file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.polygon_features_from_PALayer_vertex">
+<span class="sig-name descname"><span class="pre">polygon_features_from_PALayer_vertex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vert_ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.polygon_features_from_PALayer_vertex" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieve a list of features from the the polygons in the star of the aggregated polygon vertex ‘vert_ind’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.PALayers_mesh.</p></li>
+<li><p><strong>vert_ind</strong> (<em>int</em>) – vertex index (according to city_vert_list indexing)</p></li>
+<li><p><strong>feature</strong> (<em>string</em>) – feature name to be retrieved from each neighbour polygon.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of the features ‘feature’ from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.polygon_features_from_coords">
+<span class="sig-name descname"><span class="pre">polygon_features_from_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.polygon_features_from_coords" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieve a list of features from the the polygons in the star of the nearest vertex to a query point with coordinates (lat,long), among the aggregated polygon vertices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.PALayers_mesh.</p></li>
+<li><p><strong>lat</strong> (<em>float</em>) – latitude of the query point.</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – longitude of the query point.</p></li>
+<li><p><strong>feature</strong> (<em>string</em>) – feature name to be retrieved from each neighbour polygon.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of the features ‘feature’ from each neighbour polygon keys, or an empty list in case the CSV polygon data is not loaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.polygons_from_PALayer_vertex">
+<span class="sig-name descname"><span class="pre">polygons_from_PALayer_vertex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vert_ind</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.polygons_from_PALayer_vertex" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the polygons in the star of the aggregated polygon vertex ‘vert_ind’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.PALayers_mesh</p></li>
+<li><p><strong>vert_ind</strong> (<em>int</em>) – vertex index (according to city_vert_list indexing)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of polygon keys, according to self.PALayers_mesh_keycolumn[layer], or an empty list in case of an issue</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.preprocess_PALayer_mesh">
+<span class="sig-name descname"><span class="pre">preprocess_PALayer_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swap_coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EDGE_LENGTH_THRESHOLD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.7976931348623157e+308</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.preprocess_PALayer_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Generate data structures to quickly retrieve relevant information from the polygon meshes of Polygon-Aggregated layers.
+A city street graph is required.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.PALayers_mesh</p></li>
+<li><p><strong>build_tree</strong> (<em>bool</em>) – builds a BallTree for querying</p></li>
+<li><p><strong>swap_coordinates</strong> (<em>bool</em>) – useful when latitude and longitude coordinates are given in the wrong order.</p></li>
+<li><p><strong>EDGE_LENGTH_THRESHOLD</strong> (<em>float</em>) – maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the preprocessing succeeds.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.preprocess_RDLayer">
+<span class="sig-name descname"><span class="pre">preprocess_RDLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swap_coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.preprocess_RDLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Generate data structures to quickly retrieve relevant information from RDLayer meshes. The layer must be loaded first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.RDLayers.</p></li>
+<li><p><strong>build_tree</strong> (<em>bool</em>) – builds a BallTree for querying.</p></li>
+<li><p><strong>swap_coordinates</strong> (<em>bool</em>) – useful when latitude and longitude coordinates are given in the wrong order.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>true if the preprocessing succeeds.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.preprocess_city_mesh">
+<span class="sig-name descname"><span class="pre">preprocess_city_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EDGE_LENGTH_THRESHOLD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.7976931348623157e+308</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.preprocess_city_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Generate data structures to quickly retrieve relevant information. A valid city_street_graph is required.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>build_tree</strong> (<em>bool</em>) – builds a tree for querying</p></li>
+<li><p><strong>EDGE_LENGTH_THRESHOLD</strong> (<em>float</em>) – maximum edge length for robust nearest neighbor search. An edge will be subdivided to assure its length is less than the threshold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the preprocessing succeeds.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.project_PBLayer_to_corners">
+<span class="sig-name descname"><span class="pre">project_PBLayer_to_corners</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.project_PBLayer_to_corners" title="Permalink to this definition"></a></dt>
+<dd><p>Projects PBLayer points to the nearest city street graph corner. The layer must be loaded first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position according to self.PBLayers</p></li>
+<li><p><strong>build_tree</strong> (<em>bool</em>) – builds a BallTree for querying</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns True if the preprocessing succeeds.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.query_point_in_PALayer_mesh">
+<span class="sig-name descname"><span class="pre">query_point_in_PALayer_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_nearest_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.query_point_in_PALayer_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Query a point in lat-long format, in degrees, in a PALayer mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>float</em>) – layer position according to self.PALayers_mesh.</p></li>
+<li><p><strong>lat</strong> (<em>float</em>) – latitude of the query point</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – longitude of the query point</p></li>
+<li><p><strong>return_nearest_index</strong> (<em>bool</em>) – whether to return the nearest point index (according to vert_list indexing) or a lat-long tuple</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int (index) or tuple (lat,long) representing the nearest point in the tree.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.query_point_in_PBLayer">
+<span class="sig-name descname"><span class="pre">query_point_in_PBLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_nearest_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.query_point_in_PBLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Query all points in a PBLayer which are within a Euclidean distance ‘radius’ from a query point in
+lat-long format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer to be searched, according to its position in self.PBLayers</p></li>
+<li><p><strong>lat</strong> (<em>float</em>) – latitude of the query point</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – longitude of the query point</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – maximum Euclidian distance to search points, in kilometers</p></li>
+<li><p><strong>return_nearest_indices</strong> (<em>bool</em>) – whether to return the nearest point indices (according to PBLayers[layer] indexing) or a list of lat-long tuples</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of points within maximum distance to the query point, sorted by Euclidean distance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.query_point_in_RDLayer">
+<span class="sig-name descname"><span class="pre">query_point_in_RDLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.query_point_in_RDLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Query all points in a RDLayer which are within a Euclidian distance ‘radius’ from a query point in
+lat-long format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>int</em>) – layer position to be searched, according to self.RDLayers</p></li>
+<li><p><strong>lat</strong> (<em>float</em>) – latitude of the query point</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – longitude of the query point</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – maximum Euclidian distance to search points, in kilometers</p></li>
+<li><p><strong>unique</strong> (<em>bool</em>) – whether to return a single point per area (polygon), within the distance radius. The nearest point of each area is returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>a list of points within maximum distance to the query point, sorted by distance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.query_point_in_city_mesh">
+<span class="sig-name descname"><span class="pre">query_point_in_city_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_nearest_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.query_point_in_city_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Query a point in lat-long format (in degrees), in the city street graph.
+refined_vert_list is used in the tree, but the original vertices will be returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat</strong> (<em>float</em>) – latitude of the query point</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – longitude of the query point</p></li>
+<li><p><strong>return_nearest_index</strong> (<em>bool</em>) – whether to return the nearest point index (according to vert_list indexing) or a lat-long tuple</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int (index) or tuple (lat,long) representing the nearest point in the tree.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.query_point_in_graph_radius_in_city_mesh">
+<span class="sig-name descname"><span class="pre">query_point_in_graph_radius_in_city_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.query_point_in_graph_radius_in_city_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Query a point in lat-long format (in degrees), in the city street graph.
+First, the nearest graph vertex is found. Than, vertices which are less than ‘radius’ distance, using a distance through the graph’s edges, are returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat</strong> (<em>float</em>) – latitude of the query point</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – longitude of the query point</p></li>
+<li><p><strong>query_radius</strong> (<em>float</em>) – Include all neighbors of distance&lt;=radius from n, using the graph’s distance in km</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>a list of points within maximum graph’s distance to the query point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.save_preprocessed_CityHub">
+<span class="sig-name descname"><span class="pre">save_preprocessed_CityHub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.save_preprocessed_CityHub" title="Permalink to this definition"></a></dt>
+<dd><p>Save preprocessed data structures of a city street graph to a pickle file .</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>string</em>) – Pickle filename to be written.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.sparse_agg_estimation">
+<span class="sig-name descname"><span class="pre">sparse_agg_estimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measu_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_agg_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lng'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.sparse_agg_estimation" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregate measurements measu_name from initial_date to final_date
+using temp_agg_func to obtain a single number for each measurement
+point. Then estimates the measurement in query_points based on these
+numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measu_names</strong> (<em>str</em>) – column name from self.SMLayers_known_measurements which estimation
+will be made.</p></li>
+<li><p><strong>temp_agg_func</strong> (<em>str</em>) – string with function to be used in the temporal aggregation of
+measuarements for each measurement point (can be sum, mean, min or
+max).</p></li>
+<li><p><strong>initial_date</strong> (<em>str</em>) – date (in format dd-mm-yyyy) from which estimation will be made.</p></li>
+<li><p><strong>final_date</strong> (<em>str</em>) – date (in format dd-mm-yyyy) until which estimation will be made.</p></li>
+<li><p><strong>query_points</strong> (<em>pandas dataframe</em><em> or </em><em>'all'</em>) – points in which estimation will be made. If a pandas dataframe is
+passed, columns lat_column and lng_column are expected to show
+points latitude and longitude respectively. If ‘all’ is passed
+(default), estimation will be made in all graph vertices.</p></li>
+<li><p><strong>lat_column</strong> (<em>str</em>) – name of the column with latitude information.</p></li>
+<li><p><strong>lng_column</strong> (<em>str</em>) – name of the column with longitude information.</p></li>
+<li><p><strong>kernel_function</strong> (<em>function</em><em> or </em><em>'auto'</em>) – function expecting as input X (Nx2) and Xm (Mx2) as above and
+returning a NxM array of kernel coefficients for each point of
+interest versus each measurement point. By default (‘auto’),
+computes coefficients using a gaussian kernel with standard
+deviation equals half the average distance between two different
+measurement point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns a dataframe of shape (num_query_points, num_time_steps), or False if parameters passed were not possible to make estimations. If a dataframe is passed in query_points, dataframe returned is input dataframe with added columns.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CityHub.CityHub.CityHub.sparse_ts_estimation">
+<span class="sig-name descname"><span class="pre">sparse_ts_estimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measu_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lng'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.CityHub.sparse_ts_estimation" title="Permalink to this definition"></a></dt>
+<dd><p>Estimates time series of measurement measu_name from initial_date to
+final_date in points query_points based on time series measured at the
+measurement points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measu_name</strong> (<em>str</em>) – column name from self.SMLayers_known_measurements which estimation
+will be made.</p></li>
+<li><p><strong>initial_date</strong> (<em>str</em>) – date (in format dd-mm-yyyy) from which estimation will be made.</p></li>
+<li><p><strong>final_date</strong> (<em>str</em>) – date (in format dd-mm-yyyy) until which estimation will be made.</p></li>
+<li><p><strong>query_points</strong> (<em>pandas dataframe</em><em> or </em><em>'all'</em>) – points in which estimation will be made. If a pandas dataframe is
+passed, columns lat_column and lng_column are expected to show
+points latitude and longitude respectively. If ‘all’ is passed
+(default), estimation will be made in all graph vertices.</p></li>
+<li><p><strong>lat_column</strong> (<em>str</em>) – name of the column with latitude information.</p></li>
+<li><p><strong>lng_column</strong> (<em>str</em>) – name of the column with longitude information.</p></li>
+<li><p><strong>kernel_function</strong> (<em>function</em><em> or </em><em>'auto'</em>) – function expecting as input X (Nx2) and Xm (Mx2) as above and
+returning a NxM array of kernel coefficients for each point of
+interest versus each measurement point. By default (‘auto’),
+computes coefficients using a gaussian kernel with standard
+deviation equals half the average distance between two different
+measurement point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns a dataframe of shape (num_query_points, num_time_steps), or False if parameters passed were not possible to make estimations. If a dataframe is passed in query_points, datakernel_gaussianframe returned is input dataframe with added columns.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="CityHub.CityHub.convert_deg_query">
+<span class="sig-prename descclassname"><span class="pre">CityHub.CityHub.</span></span><span class="sig-name descname"><span class="pre">convert_deg_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.convert_deg_query" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="CityHub.CityHub.load_preprocessed_CityHub">
+<span class="sig-prename descclassname"><span class="pre">CityHub.CityHub.</span></span><span class="sig-name descname"><span class="pre">load_preprocessed_CityHub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.load_preprocessed_CityHub" title="Permalink to this definition"></a></dt>
+<dd><p>Load a preprocessed CityHub file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>string</em>) – pickle file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CityHub instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#CityHub.CityHub.CityHub" title="CityHub.CityHub.CityHub">CityHub</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="CityHub.CityHub.utm_to_latlon">
+<span class="sig-prename descclassname"><span class="pre">CityHub.CityHub.</span></span><span class="sig-name descname"><span class="pre">utm_to_latlon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone_letter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CityHub.CityHub.utm_to_latlon" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-CityHub">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-CityHub" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Karelia Salinas, Thales Goncalves, Victor Barella, Thales Vieira, and Luis Gustavo Nonato.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
