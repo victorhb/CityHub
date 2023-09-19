@@ -661,8 +661,9 @@ class CityHub:
         
         feature_list = []
         for polygon in polygon_list:
-            feature_val = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)][feature].to_numpy()[0]
-            feature_list.append(feature_val)
+            feature_val = self.PALayers_csv_data[layer].loc[self.PALayers_csv_data[layer][self.PALayers_csv_keycolumn[layer]]==int(polygon)][feature].to_numpy()
+            if feature_val.shape[0]>0:
+                feature_list.append(feature_val[0])
         return feature_list
 
     
